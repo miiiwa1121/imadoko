@@ -5,6 +5,9 @@ import { LatLngExpression } from "leaflet";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
+import Spinner from "@/components/Spinner";
+
+
 
 export default function Map() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
@@ -149,8 +152,8 @@ export default function Map() {
           </Marker>
         </MapContainer>
       ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <p>現在地を取得中です…</p>
+        <div className="flex-1">
+          <Spinner />
         </div>
       )}
     </div>
