@@ -2,17 +2,17 @@
 
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
-import { useState, useEffect, useRef } from "react"; // useRefをインポート
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 
 export default function Map() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
   const [shareId, setShareId] = useState<string | null>(null);
-  // useRefを使って、setIntervalのIDを保持する
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  const [isCopied, setIsCopied] = useState(false); // コピー状態を管理するstateを追加
 
-  // 位置情報を取得し、DBに保存する関数
+  // ... updateLocation, handleShareStart, useEffectなどの関数は変更なし ...
   const updateLocation = async (currentShareId: string) => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -39,40 +39,30 @@ export default function Map() {
     );
   };
 
-  // 「共有開始」ボタンが押された時の処理
   const handleShareStart = () => {
     const newShareId = nanoid(10);
     setShareId(newShareId);
     updateLocation(newShareId);
   };
 
-  // --- ▼ここから追加・変更 ▼ ---
-  // 「共有停止」ボタンが押された時の処理
   const handleShareStop = () => {
-    // 定期更新を停止する
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
       intervalIdRef.current = null;
     }
-    // 状態を初期化して、最初の画面に戻す
     setShareId(null);
     setPosition(null);
   };
-  // --- ▲ここまで追加・変更 ▲ ---
 
-  // 共有が開始されたら、定期的に位置情報を更新する
   useEffect(() => {
     if (shareId) {
-      // 既存のintervalがあればクリアする
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
       }
-      // setIntervalのIDをuseRefに保存
       intervalIdRef.current = setInterval(() => {
         updateLocation(shareId);
       }, 15000);
 
-      // コンポーネントが消える時に定期更新を停止
       return () => {
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
@@ -81,16 +71,29 @@ export default function Map() {
     }
   }, [shareId]);
 
-  // UI部分
+  // --- ▼ここからUI部分の変更 ▼ ---
+
+  // 「コピー」ボタンが押された時の処理
+  const handleCopyLink = () => {
+    const link = `${window.location.origin}/share/${shareId}`;
+    navigator.clipboard.writeText(link); // リンクをクリップボードにコピー
+    setIsCopied(true); // コピー状態をtrueに
+
+    // 2秒後にボタンの表示を元に戻す
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
+  };
+
+  // 共有が開始されていない場合
   if (!shareId) {
-    // ... 共有開始画面（変更なし） ...
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-        <h1 className="text-2xl font-bold mb-4">リアルタイム位置情報共有</h1>
-        <p className="mb-8">ボタンを押して、あなたの位置情報を共有しましょう。</p>
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4 text-center">
+        <h1 className="text-3xl font-bold mb-4">リアルタイム位置情報共有アプリ</h1>
+        <p className="mb-8 text-gray-600">ボタンを押して、あなたの現在地を一時的に共有するリンクを作成します。</p>
         <button
           onClick={handleShareStart}
-          className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+          className="px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-105"
         >
           共有リンクを作成
         </button>
@@ -101,27 +104,36 @@ export default function Map() {
   // 共有が開始された場合
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-4 bg-gray-800 text-white">
-        <p className="font-semibold">共有リンクが作成されました！</p>
-        <p className="text-sm">このリンクを共有相手に送ってください。</p>
-        <input
-          type="text"
-          readOnly
-          value={`${window.location.origin}/share/${shareId}`}
-          className="w-full p-2 mt-2 bg-gray-700 rounded border border-gray-600"
-          onClick={(e) => e.currentTarget.select()}
-        />
-        {/* --- ▼ここから追加 ▼ --- */}
+      <div className="p-4 bg-gray-800 text-white shadow-lg z-10">
+        <p className="font-semibold text-lg">共有リンクが作成されました！</p>
+        <p className="text-sm text-gray-300">このリンクを共有相手に送ってください。</p>
+        {/* リンク表示とコピーボタンをflexboxで横並びに */}
+        <div className="flex items-center mt-2 space-x-2">
+          <input
+            type="text"
+            readOnly
+            value={`${window.location.origin}/share/${shareId}`}
+            className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-gray-200"
+          />
+          <button
+            onClick={handleCopyLink}
+            className={`px-4 py-2 text-white font-semibold rounded-lg shadow-md transition-colors ${
+              isCopied
+                ? "bg-green-500" // コピー後は緑色に
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+          >
+            {isCopied ? "コピー完了！" : "コピー"}
+          </button>
+        </div>
         <button
           onClick={handleShareStop}
           className="w-full mt-3 px-6 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors"
         >
           共有を停止する
         </button>
-        {/* --- ▲ここまで追加 ▲ --- */}
       </div>
       {position ? (
-        // ... 地図表示部分（変更なし） ...
         <MapContainer
           center={position}
           zoom={16}
@@ -143,4 +155,5 @@ export default function Map() {
       )}
     </div>
   );
+  // --- ▲ここまでUI部分の変更 ▲ ---
 }
