@@ -4,7 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-type ShareMapProps = {
+// ▼ この行の先頭に「export」を追加
+export type ShareMapProps = {
   position: LatLngExpression;
 };
 
