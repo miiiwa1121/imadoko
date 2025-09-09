@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 import Spinner from "@/components/Spinner";
 import { Share2, Link as LinkIcon } from 'lucide-react';
+import { customIcon } from "@/lib/customIcons"; // カスタムアイコンをインポート
 
 export default function Map() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
@@ -152,7 +153,9 @@ export default function Map() {
       {position ? (
         <MapContainer center={position} zoom={16} scrollWheelZoom={true} style={{ flex: 1, width: "100%" }}>
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={position}><Popup>共有中の現在地</Popup></Marker>
+          <Marker position={position} icon={customIcon}>
+            <Popup>共有中の現在地</Popup>
+          </Marker>
         </MapContainer>
       ) : (
         <div className="flex-1"><Spinner /></div>
