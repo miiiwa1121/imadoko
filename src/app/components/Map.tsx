@@ -7,22 +7,35 @@ import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 import Spinner from "@/components/Spinner";
 
-
-
 export default function Map() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
   const [shareId, setShareId] = useState<string | null>(null);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
-  const [isCopied, setIsCopied] = useState(false); // コピー状態を管理するstateを追加
+  const [isCopied, setIsCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // ページ読み込み状態を管理
 
-  // ... updateLocation, handleShareStart, useEffectなどの関数は変更なし ...
-  const updateLocation = async (currentShareId: string) => {
+  // --- ▼ここから変更・追加 ▼ ---
+
+  // 1. ページが読み込まれた時に、localStorageから共有状態を復元する
+  useEffect(() => {
+    const storedShareId = localStorage.getItem("shareId");
+    if (storedShareId) {
+      setShareId(storedShareId);
+      // 復元時はすぐに位置情報を取得・送信する
+      updateLocation(storedShareId, true);
+    }
+    setIsLoading(false); // 初期読み込み完了
+  }, []); // 空の配列なので、初回の一度だけ実行される
+
+  // 2. 位置情報を取得し、DBに保存する関数を更新
+  const updateLocation = async (currentShareId: string, initialLoad = false) => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         const newPosition: LatLngExpression = [latitude, longitude];
         setPosition(newPosition);
 
+        // Supabaseに送信
         const { error } = await supabase.from("locations").insert({
           lat: latitude,
           lng: longitude,
@@ -32,31 +45,36 @@ export default function Map() {
         if (error) {
           console.error("Supabaseへのデータ保存に失敗しました:", error);
         } else {
-          console.log("Supabaseに現在地を保存しました！");
+          console.log(`Supabaseに現在地を保存しました (初回: ${initialLoad})`);
         }
       },
       (err) => {
         console.error(err);
-        setPosition([35.681236, 139.767125]);
+        setPosition([35.681236, 139.767125]); // エラー時は東京駅
       }
     );
   };
 
+  // 3. 「共有開始」時にlocalStorageに保存する
   const handleShareStart = () => {
     const newShareId = nanoid(10);
+    localStorage.setItem("shareId", newShareId); // localStorageに保存
     setShareId(newShareId);
-    updateLocation(newShareId);
+    updateLocation(newShareId, true);
   };
 
+  // 4. 「共有停止」時にlocalStorageから削除する
   const handleShareStop = () => {
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
       intervalIdRef.current = null;
     }
+    localStorage.removeItem("shareId"); // localStorageから削除
     setShareId(null);
     setPosition(null);
   };
 
+  // 5. 定期更新のロジックは変更なし
   useEffect(() => {
     if (shareId) {
       if (intervalIdRef.current) {
@@ -74,19 +92,21 @@ export default function Map() {
     }
   }, [shareId]);
 
-  // --- ▼ここからUI部分の変更 ▼ ---
 
-  // 「コピー」ボタンが押された時の処理
   const handleCopyLink = () => {
     const link = `${window.location.origin}/share/${shareId}`;
-    navigator.clipboard.writeText(link); // リンクをクリップボードにコピー
-    setIsCopied(true); // コピー状態をtrueに
-
-    // 2秒後にボタンの表示を元に戻す
-    setTimeout(() => {
-      setIsCopied(false);
-    }, 2000);
+    navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
+
+  // --- ▲ここまで変更・追加 ▲ ---
+
+
+  // 初期読み込み中はスピナーを表示
+  if (isLoading) {
+    return <Spinner />;
+  }
 
   // 共有が開始されていない場合
   if (!shareId) {
@@ -110,7 +130,6 @@ export default function Map() {
       <div className="p-4 bg-gray-800 text-white shadow-lg z-10">
         <p className="font-semibold text-lg">共有リンクが作成されました！</p>
         <p className="text-sm text-gray-300">このリンクを共有相手に送ってください。</p>
-        {/* リンク表示とコピーボタンをflexboxで横並びに */}
         <div className="flex items-center mt-2 space-x-2">
           <input
             type="text"
@@ -121,9 +140,7 @@ export default function Map() {
           <button
             onClick={handleCopyLink}
             className={`px-4 py-2 text-white font-semibold rounded-lg shadow-md transition-colors ${
-              isCopied
-                ? "bg-green-500" // コピー後は緑色に
-                : "bg-blue-500 hover:bg-blue-600"
+              isCopied ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"
             }`}
           >
             {isCopied ? "コピー完了！" : "コピー"}
@@ -158,5 +175,4 @@ export default function Map() {
       )}
     </div>
   );
-  // --- ▲ここまでUI部分の変更 ▲ ---
 }
