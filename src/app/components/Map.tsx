@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 import Spinner from "@/components/Spinner";
+import { Share2, Link as LinkIcon } from 'lucide-react';
 
 export default function Map() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
@@ -106,16 +107,33 @@ export default function Map() {
 
   // UI部分はほぼ変更なし
   if (isLoading) return <Spinner />;
-  if (!shareId) return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4 text-center">
-      <h1 className="text-3xl font-bold mb-4">リアルタイム位置情報共有アプリ</h1>
-      <p className="mb-8 text-gray-600">ボタンを押して、あなたの現在地を一時的に共有するリンクを作成します。</p>
-      <button onClick={handleShareStart} className="px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-105">
-        共有リンクを作成
-      </button>
-    </div>
-  );
-
+  if (!shareId) {
+    return (
+      <main className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center p-8 max-w-md mx-auto">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-blue-500 rounded-full">
+              <Share2 size={40} className="text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Imadoko Share
+          </h1>
+          <p className="mb-8 text-gray-600">
+            あなたの現在地を、一時的に共有するためのリンクをワンタップで作成します。
+            アプリのインストールやアカウント登録は不要です。
+          </p>
+          <button
+            onClick={handleShareStart}
+            className="flex items-center justify-center w-full max-w-xs mx-auto px-8 py-4 bg-blue-500 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-600 transition-transform transform hover:scale-105"
+          >
+            <LinkIcon size={20} className="mr-2" />
+            共有リンクを作成
+          </button>
+        </div>
+      </main>
+    );
+  }
   return (
     <div className="flex flex-col h-screen">
       <div className="p-4 bg-gray-800 text-white shadow-lg z-10">

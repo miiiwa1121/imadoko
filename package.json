@@ -11,6 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.57.2",
     "leaflet": "^1.9.4",
+    "lucide-react": "^0.543.0",
     "nanoid": "^5.1.5",
     "next": "15.5.0",
     "react": "19.1.0",
