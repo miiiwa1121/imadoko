@@ -9,10 +9,14 @@ export const customIcon = new L.Icon({
 
 // Tailwind CSSの base style で img に max-width: 100% が適用されると
 // Leafletマーカーの位置がずれるため、.leaflet-pane img に対して max-width を無効化
-const style = document.createElement('style');
-style.textContent = `
-  .leaflet-pane img {
-    max-width: none !important;
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .leaflet-pane img {
+      max-width: none !important;
+    }
+  `;
+  if (document.head) {
+    document.head.appendChild(style);
   }
-`;
-document.head.appendChild(style);
+}
