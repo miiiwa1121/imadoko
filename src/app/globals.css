@@ -36,3 +36,11 @@ body {
   width: auto;
   padding: 0;
 }
+
+/* Leafletのマーカー位置ずれを修正 (根本解決版) */
+img.fix-marker-size {
+  max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
+}
