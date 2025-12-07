@@ -3,134 +3,152 @@ import { LatLngExpression } from "leaflet";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 
-export function useLocationSession() {
-  const [position, setPosition] = useState<LatLngExpression | null>(null);
-  const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null);
+export const useLocationSession = () => {
+  const [position, setPosition] = useState<LatLngExpression | null>(null); // ホストの位置
+  const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null); // ゲストの位置
   const [shareId, setShareId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 位置情報をDBに更新する関数
-  const updateLocation = async (currentShareId: string) => {
+  // ホストの位置情報をDBに送信する関数（自分の更新のみ行う）
+  const updateHostLocation = async (currentShareId: string) => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        const newPosition: LatLngExpression = [latitude, longitude];
-        setPosition(newPosition);
+        setPosition([latitude, longitude]);
 
-        // sessionsテーブルの該当IDの行を更新する
+        // ホストの座標(lat, lng)だけを更新
         const { error } = await supabase
           .from("sessions")
-          .update({ lat: latitude, lng: longitude })
+          .update({
+            lat: latitude,
+            lng: longitude,
+          })
           .eq("id", currentShareId);
 
-        if (error) console.error("DB更新エラー:", error);
-        else console.log("DBの位置情報を更新しました");
+        if (error) console.error("ホスト位置更新エラー:", error);
+      },
+      (err) => console.error(err),
+      { enableHighAccuracy: true }
+    );
+  };
+
+  const handleShareStart = async () => {
+    setIsLoading(true);
+    const newShareId = nanoid(10);
+    
+    // セッションの初期作成
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setPosition([latitude, longitude]);
+
+        const { error } = await supabase.from("sessions").insert({
+          id: newShareId,
+          lat: latitude,
+          lng: longitude,
+          status: 'active',
+          // ゲスト情報は最初はnull
+        });
+
+        if (error) {
+          console.error("セッション作成エラー:", error);
+          alert("共有の開始に失敗しました");
+          setIsLoading(false);
+          return;
+        }
+
+        setShareId(newShareId);
+        // ローカルストレージに保存（復元用）
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shareId", newShareId);
+        }
+        setIsLoading(false);
       },
       (err) => {
         console.error(err);
-        setPosition([35.681236, 139.767125]);
+        alert("位置情報の取得に失敗しました");
+        setIsLoading(false);
       }
     );
   };
 
-  // 共有開始時にsessionsテーブルに行を追加する
-  const handleShareStart = async () => {
-    const newShareId = nanoid(10);
-    localStorage.setItem("shareId", newShareId);
-    setShareId(newShareId);
-
-    // 新しいセッションをDBに作成
-    const { error } = await supabase
-      .from("sessions")
-      .insert({ id: newShareId, status: "active" });
-
-    if (error) {
-      console.error("セッション作成エラー:", error);
-      // エラーハンドリング（必要に応じて）
-    } else {
-      updateLocation(newShareId);
-    }
-  };
-
-  // 共有停止時にstatusを'stopped'に更新する
   const handleShareStop = async () => {
-    if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     if (shareId) {
-      // DBのセッションステータスを更新
-      const { error } = await supabase
+      await supabase
         .from("sessions")
-        .update({ status: "stopped" })
+        .update({ status: 'stopped' })
         .eq("id", shareId);
-      if (error) console.error("セッション停止エラー:", error);
     }
 
-    localStorage.removeItem("shareId");
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+      intervalIdRef.current = null;
+    }
     setShareId(null);
     setPosition(null);
     setGuestPosition(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("shareId");
+    }
   };
 
-  // localStorageからの復元ロジック
-  useEffect(() => {
-    const storedShareId = localStorage.getItem("shareId");
-    if (storedShareId) {
-      setShareId(storedShareId);
-      updateLocation(storedShareId);
-    }
-    setIsLoading(false);
-  }, []);
-
-  // 定期更新ロジック
+  // 監視と定期更新のロジック
   useEffect(() => {
     if (shareId) {
-      if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+      // 1. 即座に一度更新
+      updateHostLocation(shareId);
+
+      // 2. 定期的に自分の位置を更新 (10秒ごと)
       intervalIdRef.current = setInterval(() => {
-        updateLocation(shareId);
-      }, 15000);
+        updateHostLocation(shareId);
+      }, 10000);
+
+      // 3. DBの変更を監視して、ゲストの位置(guest_lat, guest_lng)を取得
+      const channel = supabase
+        .channel(`session-${shareId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "sessions",
+            filter: `id=eq.${shareId}`,
+          },
+          (payload) => {
+            const newData = payload.new;
+            // ゲストの位置があれば更新
+            if (newData.guest_lat && newData.guest_lng) {
+              setGuestPosition([newData.guest_lat, newData.guest_lng]);
+            }
+          }
+        )
+        .subscribe();
+
       return () => {
         if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+        supabase.removeChannel(channel);
       };
     }
   }, [shareId]);
 
-  // ゲスト位置情報をリアルタイムで監視
+  // ページロード時の復元ロジック
   useEffect(() => {
-    if (!shareId) return;
-
-    const channel = supabase
-      .channel(`session-channel-${shareId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "sessions",
-          filter: `id=eq.${shareId}`,
-        },
-        (payload) => {
-          const { guest_lat, guest_lng } = payload.new as {
-            guest_lat?: number;
-            guest_lng?: number;
-          };
-          if (guest_lat && guest_lng) {
-            setGuestPosition([guest_lat, guest_lng]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [shareId]);
+    if (typeof window !== "undefined") {
+      const savedShareId = localStorage.getItem("shareId");
+      if (savedShareId) {
+        setShareId(savedShareId);
+      }
+    }
+  }, []);
 
   return {
-    position,
-    guestPosition,
+    position,     // ホスト位置
+    guestPosition,// ゲスト位置（追加）
     shareId,
     isLoading,
     handleShareStart,
     handleShareStop,
   };
-}
+};
