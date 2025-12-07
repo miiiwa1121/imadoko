@@ -17,13 +17,13 @@ export function useLocationSession() {
         const { latitude, longitude } = pos.coords;
         setPosition([latitude, longitude]);
 
-        // ▼ 変更点: 位置更新と同時に status='active' も念のため更新しておく（リロード復帰対策）
+        // ステータスを 'active' に上書きし続ける（リロード復帰用）
         const { error } = await supabase
           .from("sessions")
           .update({ 
             lat: latitude, 
             lng: longitude,
-            status: 'active' // 常にアクティブであることを主張する
+            status: 'active' 
           })
           .eq("id", currentShareId);
 
@@ -36,7 +36,6 @@ export function useLocationSession() {
 
   const handleShareStart = async () => {
     const newShareId = nanoid(10);
-    // ... (位置情報取得とDBインサート処理は前回と同じ) ...
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -51,8 +50,9 @@ export function useLocationSession() {
 
         if (!error) {
           setShareId(newShareId);
+          // ★変更: sessionStorageを使う（タブを閉じると消えるが、リロードでは残る）
           if (typeof window !== "undefined") {
-            localStorage.setItem("shareId", newShareId);
+            sessionStorage.setItem("shareId", newShareId);
           }
         } else {
             console.error("開始エラー", error);
@@ -67,23 +67,23 @@ export function useLocationSession() {
     );
   };
 
-  // 「ボタンで」停止した時だけ、ローカルストレージを消す
   const handleShareStop = async () => {
     if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     if (shareId) {
       await supabase.from("sessions").update({ status: "stopped" }).eq("id", shareId);
     }
-    localStorage.removeItem("shareId"); // ★ボタン停止の時だけ消す
+    // ★変更: sessionStorageから削除
+    sessionStorage.removeItem("shareId");
     setShareId(null);
     setPosition(null);
     setGuestPosition(null);
   };
 
-  // ▼▼▼ 自動停止ロジック（タブ閉じ対策） ▼▼▼
+  // タブを閉じる（またはリロード）直前の処理
   useEffect(() => {
     const handleTabClose = () => {
       if (shareId) {
-        // APIに「停止」信号を送るが、ローカルストレージは消さない
+        // APIに「停止」信号を送る
         const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
         navigator.sendBeacon("/api/stop-sharing", blob);
       }
@@ -93,30 +93,30 @@ export function useLocationSession() {
     return () => window.removeEventListener("pagehide", handleTabClose);
   }, [shareId]);
 
-  // ▼▼▼ 復元ロジック（リロード対策） ▼▼▼
+  // 復元ロジック（リロード対策）
   useEffect(() => {
-    const storedShareId = localStorage.getItem("shareId");
+    // ★変更: sessionStorageから復元
+    const storedShareId = sessionStorage.getItem("shareId");
     if (storedShareId) {
       setShareId(storedShareId);
-      // リロード直後、即座に「私はアクティブです！」とDBを更新して、
-      // pagehideで送られたかもしれない「停止」信号を上書きする
+      // リロード直後、即座に「active」で上書きして停止信号を打ち消す
       updateHostLocation(storedShareId);
     }
     setIsLoading(false);
   }, []);
 
-  // 定期更新と監視（変更なし）
+  // 定期更新
   useEffect(() => {
     if (shareId) {
       if (intervalIdRef.current) clearInterval(intervalIdRef.current);
       intervalIdRef.current = setInterval(() => {
         updateHostLocation(shareId);
-      }, 15000); // 15秒間隔
+      }, 15000);
 
       const channel = supabase
         .channel(`session-${shareId}`)
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${shareId}` }, (payload) => {
-             const newData = payload.new;
+             const newData = payload.new as any;
              if (newData.guest_lat && newData.guest_lng) {
                setGuestPosition([newData.guest_lat, newData.guest_lng]);
              }
