@@ -2,7 +2,6 @@
 
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { customIcon } from "@/lib/customIcons"; // カスタムアイコンをインポート
 
 export type ShareMapProps = {
