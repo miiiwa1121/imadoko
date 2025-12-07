@@ -3,11 +3,11 @@ import { LatLngExpression } from "leaflet";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 
-export const useLocationSession = () => {
+export function useLocationSession() {
   const [position, setPosition] = useState<LatLngExpression | null>(null); // ホストの位置
   const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null); // ゲストの位置
   const [shareId, setShareId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -35,7 +35,6 @@ export const useLocationSession = () => {
   };
 
   const handleShareStart = async () => {
-    setIsLoading(true);
     const newShareId = nanoid(10);
     
     // セッションの初期作成
@@ -55,7 +54,6 @@ export const useLocationSession = () => {
         if (error) {
           console.error("セッション作成エラー:", error);
           alert("共有の開始に失敗しました");
-          setIsLoading(false);
           return;
         }
 
@@ -64,12 +62,10 @@ export const useLocationSession = () => {
         if (typeof window !== "undefined") {
           localStorage.setItem("shareId", newShareId);
         }
-        setIsLoading(false);
       },
       (err) => {
         console.error(err);
         alert("位置情報の取得に失敗しました");
-        setIsLoading(false);
       }
     );
   };
@@ -94,18 +90,27 @@ export const useLocationSession = () => {
     }
   };
 
+  // localStorageからの復元ロジック
+  useEffect(() => {
+    const storedShareId = localStorage.getItem("shareId");
+    if (storedShareId) {
+      setShareId(storedShareId);
+      // 即座に更新
+      updateHostLocation(storedShareId);
+    }
+    setIsLoading(false);
+  }, []);
+
   // 監視と定期更新のロジック
   useEffect(() => {
     if (shareId) {
-      // 1. 即座に一度更新
-      updateHostLocation(shareId);
-
-      // 2. 定期的に自分の位置を更新 (10秒ごと)
+      // 1. 定期的に自分の位置を更新 (15秒ごと)
+      if (intervalIdRef.current) clearInterval(intervalIdRef.current);
       intervalIdRef.current = setInterval(() => {
         updateHostLocation(shareId);
-      }, 10000);
+      }, 15000);
 
-      // 3. DBの変更を監視して、ゲストの位置(guest_lat, guest_lng)を取得
+      // 2. DBの変更を監視して、ゲストの位置(guest_lat, guest_lng)を取得
       const channel = supabase
         .channel(`session-${shareId}`)
         .on(
@@ -133,16 +138,6 @@ export const useLocationSession = () => {
     }
   }, [shareId]);
 
-  // ページロード時の復元ロジック
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedShareId = localStorage.getItem("shareId");
-      if (savedShareId) {
-        setShareId(savedShareId);
-      }
-    }
-  }, []);
-
   return {
     position,     // ホスト位置
     guestPosition,// ゲスト位置（追加）
@@ -151,4 +146,4 @@ export const useLocationSession = () => {
     handleShareStart,
     handleShareStop,
   };
-};
+}

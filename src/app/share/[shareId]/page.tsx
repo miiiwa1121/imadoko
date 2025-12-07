@@ -123,7 +123,7 @@ export default function SharePage({ params }: PageProps) {
 
   // 地図表示
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen relative">
       <ShareMap hostPosition={hostPosition} guestPosition={guestPosition} />
       
       {/* ゲストへのガイダンス（オーバーレイ） */}
