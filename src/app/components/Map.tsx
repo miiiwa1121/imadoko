@@ -73,7 +73,11 @@ export default function Map() {
 
       {/* 地図コンポーネント：ホストとゲスト両方の位置を渡す */}
       <div className="flex-1 w-full h-full z-0">
-        <ShareMap hostPosition={position} guestPosition={guestPosition} />
+        <ShareMap 
+          hostPosition={position} 
+          guestPosition={guestPosition} 
+          hostLabel="あなた" 
+          guestLabel="相手" />
       </div>
     </div>
   );

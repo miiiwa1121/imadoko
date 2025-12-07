@@ -1,17 +1,23 @@
 "use client";
 
-import { MapContainer, TileLayer } from "react-leaflet"; // Marker, Popupのインポートは不要
+import { MapContainer, TileLayer } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
-
-// ▼ 新しいマーカーコンポーネントをインポート
 import CustomMarker from "@/components/CustomMarker";
 
 export type ShareMapProps = {
   hostPosition: LatLngExpression | null;
   guestPosition: LatLngExpression | null;
+  // ▼ 追加: ピンのラベル文字を自由に設定できるようにする
+  hostLabel?: string;
+  guestLabel?: string;
 };
 
-export default function ShareMap({ hostPosition, guestPosition }: ShareMapProps) {
+export default function ShareMap({ 
+  hostPosition, 
+  guestPosition,
+  hostLabel = "ホスト",   // デフォルト値
+  guestLabel = "ゲスト"   // デフォルト値
+}: ShareMapProps) {
   const centerPosition: LatLngExpression = hostPosition || guestPosition || [35.681236, 139.767125];
 
   return (
@@ -20,7 +26,7 @@ export default function ShareMap({ hostPosition, guestPosition }: ShareMapProps)
       zoom={15}
       scrollWheelZoom={true}
       style={{ height: "100vh", width: "100%" }}
-      className="z-0" // 地図の重なり順を明示
+      className="z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -32,7 +38,7 @@ export default function ShareMap({ hostPosition, guestPosition }: ShareMapProps)
         <CustomMarker 
           position={hostPosition} 
           type="host" 
-          popupText="ホスト（共有元）" 
+          popupText={hostLabel} // 受け取った文字を表示
         />
       )}
 
@@ -41,7 +47,7 @@ export default function ShareMap({ hostPosition, guestPosition }: ShareMapProps)
         <CustomMarker 
           position={guestPosition} 
           type="guest" 
-          popupText="ゲスト（あなた/相手）" 
+          popupText={guestLabel} // 受け取った文字を表示
         />
       )}
     </MapContainer>
