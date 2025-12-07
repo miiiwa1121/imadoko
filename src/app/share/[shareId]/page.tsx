@@ -13,7 +13,8 @@ type PageProps = {
 
 export default function SharePage({ params }: PageProps) {
   const { shareId } = use(params);
-  const [position, setPosition] = useState<LatLngExpression | null>(null);
+  const [hostPosition, setHostPosition] = useState<LatLngExpression | null>(null);
+  const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null);
   const [status, setStatus] = useState<string>("loading"); // 'loading', 'active', 'stopped'
 
   const ShareMap = useMemo<React.ComponentType<ShareMapProps>>(
@@ -30,7 +31,7 @@ export default function SharePage({ params }: PageProps) {
     const fetchInitialSession = async () => {
       const { data, error } = await supabase
         .from("sessions")
-        .select("lat, lng, status")
+        .select("lat, lng, guest_lat, guest_lng, status")
         .eq("id", shareId)
         .single();
 
@@ -40,7 +41,10 @@ export default function SharePage({ params }: PageProps) {
       } else {
         setStatus(data.status);
         if (data.lat && data.lng) {
-          setPosition([data.lat, data.lng]);
+          setHostPosition([data.lat, data.lng]);
+        }
+        if (data.guest_lat && data.guest_lng) {
+          setGuestPosition([data.guest_lat, data.guest_lng]);
         }
       }
     };
@@ -59,14 +63,19 @@ export default function SharePage({ params }: PageProps) {
           filter: `id=eq.${shareId}`,
         },
         (payload) => {
-          const { lat, lng, status } = payload.new as {
+          const { lat, lng, guest_lat, guest_lng, status } = payload.new as {
             lat: number;
             lng: number;
+            guest_lat?: number;
+            guest_lng?: number;
             status: string;
           };
           setStatus(status);
           if (lat && lng) {
-            setPosition([lat, lng]);
+            setHostPosition([lat, lng]);
+          }
+          if (guest_lat && guest_lng) {
+            setGuestPosition([guest_lat, guest_lng]);
           }
         }
       )
@@ -75,6 +84,38 @@ export default function SharePage({ params }: PageProps) {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [shareId]);
+
+  // ゲストの位置情報を更新する関数
+  useEffect(() => {
+    const updateGuestLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setGuestPosition([latitude, longitude]);
+
+          // DBにゲストの位置情報を保存
+          const { error } = await supabase
+            .from("sessions")
+            .update({ guest_lat: latitude, guest_lng: longitude })
+            .eq("id", shareId);
+
+          if (error) console.error("ゲスト位置情報DB更新エラー:", error);
+          else console.log("ゲストの位置情報を更新しました");
+        },
+        (err) => {
+          console.error("位置情報取得エラー:", err);
+        }
+      );
+    };
+
+    // 初回取得
+    updateGuestLocation();
+
+    // 15秒ごとに更新
+    const intervalId = setInterval(updateGuestLocation, 15000);
+
+    return () => clearInterval(intervalId);
   }, [shareId]);
 
   if (status === "loading") {
@@ -90,7 +131,7 @@ export default function SharePage({ params }: PageProps) {
   }
 
   // statusが'active'の場合
-  if (!position) {
+  if (!hostPosition) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>ホストからの位置情報待機中...</p>
@@ -98,5 +139,5 @@ export default function SharePage({ params }: PageProps) {
     );
   }
   
-  return <ShareMap position={position} />;
+  return <ShareMap hostPosition={hostPosition} guestPosition={guestPosition} />;
 }

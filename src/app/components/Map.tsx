@@ -6,9 +6,19 @@ import { useLocationSession } from "@/hooks/useLocationSession";
 import Spinner from "@/components/Spinner";
 import { Share2, Link as LinkIcon } from 'lucide-react';
 import { customIcon } from "@/lib/customIcons";
+import L from "leaflet";
+
+// ゲスト用のアイコン（青色）
+const guestIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj4KICAKICA8cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwIDEyLjUgMjggMTIuNSAyOHMyMC01IDEyLjUtMjhjMC02LjktNS42LTEyLjUtMTIuNS0xMi41eiIgZmlsbD0iIzMzNzJlNiIvPgogIDxjaXJjbGUgY3g9IjEyLjUiIGN5PSIxMi41IiByPSI0IiBmaWxsPSIjZmZmIi8+Cjwvc3ZnPg==',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  className: 'fix-marker-size'
+});
 
 export default function Map() {
-  const { position, shareId, isLoading, handleShareStart, handleShareStop } = useLocationSession();
+  const { position, shareId, isLoading, handleShareStart, handleShareStop, guestPosition } = useLocationSession();
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopyLink = () => {
@@ -66,8 +76,13 @@ export default function Map() {
         <MapContainer center={position} zoom={16} scrollWheelZoom={true} style={{ flex: 1, width: "100%" }}>
           <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <Marker position={position} icon={customIcon}>
-            <Popup>共有中の現在地</Popup>
+            <Popup>あなたの現在地（ホスト）</Popup>
           </Marker>
+          {guestPosition && (
+            <Marker position={guestPosition} icon={guestIcon}>
+              <Popup>共有相手の現在地（ゲスト）</Popup>
+            </Marker>
+          )}
         </MapContainer>
       ) : (
         <div className="flex-1"><Spinner /></div>

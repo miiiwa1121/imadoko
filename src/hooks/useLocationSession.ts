@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 
 export function useLocationSession() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
+  const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null);
   const [shareId, setShareId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -67,6 +68,7 @@ export function useLocationSession() {
     localStorage.removeItem("shareId");
     setShareId(null);
     setPosition(null);
+    setGuestPosition(null);
   };
 
   // localStorageからの復元ロジック
@@ -92,8 +94,40 @@ export function useLocationSession() {
     }
   }, [shareId]);
 
+  // ゲスト位置情報をリアルタイムで監視
+  useEffect(() => {
+    if (!shareId) return;
+
+    const channel = supabase
+      .channel(`session-channel-${shareId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "sessions",
+          filter: `id=eq.${shareId}`,
+        },
+        (payload) => {
+          const { guest_lat, guest_lng } = payload.new as {
+            guest_lat?: number;
+            guest_lng?: number;
+          };
+          if (guest_lat && guest_lng) {
+            setGuestPosition([guest_lat, guest_lng]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [shareId]);
+
   return {
     position,
+    guestPosition,
     shareId,
     isLoading,
     handleShareStart,
