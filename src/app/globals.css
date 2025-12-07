@@ -41,6 +41,4 @@ body {
 img.fix-marker-size {
   max-width: none !important;
   max-height: none !important;
-  width: auto !important;
-  height: auto !important;
 }
