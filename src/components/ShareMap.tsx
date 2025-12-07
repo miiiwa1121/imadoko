@@ -1,27 +1,26 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet"; // Marker, Popupのインポートは不要
 import { LatLngExpression } from "leaflet";
-import { customIcon, guestIcon } from "@/lib/customIcons";
+
+// ▼ 新しいマーカーコンポーネントをインポート
+import CustomMarker from "@/components/CustomMarker";
 
 export type ShareMapProps = {
-  hostPosition: LatLngExpression | null;   // ホストの位置（赤）
-  guestPosition: LatLngExpression | null;  // ゲストの位置（青）
+  hostPosition: LatLngExpression | null;
+  guestPosition: LatLngExpression | null;
 };
 
 export default function ShareMap({ hostPosition, guestPosition }: ShareMapProps) {
-  // 地図の中心を決めるロジック
-  // 1. ホストがいればホスト中心
-  // 2. ホストがいなくてゲストがいればゲスト中心
-  // 3. 両方いなければ東京駅
   const centerPosition: LatLngExpression = hostPosition || guestPosition || [35.681236, 139.767125];
 
   return (
     <MapContainer
       center={centerPosition}
-      zoom={15} // 少し広域が見えるように調整
+      zoom={15}
       scrollWheelZoom={true}
       style={{ height: "100vh", width: "100%" }}
+      className="z-0" // 地図の重なり順を明示
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -30,16 +29,20 @@ export default function ShareMap({ hostPosition, guestPosition }: ShareMapProps)
 
       {/* ホストのマーカー（赤） */}
       {hostPosition && (
-        <Marker position={hostPosition} icon={customIcon}>
-          <Popup>ホスト（共有元）の現在地</Popup>
-        </Marker>
+        <CustomMarker 
+          position={hostPosition} 
+          type="host" 
+          popupText="ホスト（共有元）" 
+        />
       )}
 
       {/* ゲストのマーカー（青） */}
       {guestPosition && (
-        <Marker position={guestPosition} icon={guestIcon}>
-          <Popup>ゲスト（あなた/相手）の現在地</Popup>
-        </Marker>
+        <CustomMarker 
+          position={guestPosition} 
+          type="guest" 
+          popupText="ゲスト（あなた/相手）" 
+        />
       )}
     </MapContainer>
   );

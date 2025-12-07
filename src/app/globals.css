@@ -25,20 +25,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-/* Leafletの画像サイズがTailwindによって書き換えられるのを防ぐ */
-.leaflet-pane img,
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-tile {
-  max-width: none !important;
-  max-height: none !important;
-  width: auto;
-  padding: 0;
-}
-
-/* Leafletのマーカー位置ずれを修正 (根本解決版) */
-img.fix-marker-size {
-  max-width: none !important;
-  max-height: none !important;
-}
