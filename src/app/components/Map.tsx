@@ -5,17 +5,7 @@ import { useState } from "react";
 import { useLocationSession } from "@/hooks/useLocationSession";
 import Spinner from "@/components/Spinner";
 import { Share2, Link as LinkIcon } from 'lucide-react';
-import { customIcon } from "@/lib/customIcons";
-import L from "leaflet";
-
-// ゲスト用のアイコン（青色）
-const guestIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSI0MSIgdmlld0JveD0iMCAwIDI1IDQxIj4KICAKICA8cGF0aCBkPSJNMTIuNSAwQzUuNiAwIDAgNS42IDAgMTIuNWMwIDEwIDEyLjUgMjggMTIuNSAyOHMyMC01IDEyLjUtMjhjMC02LjktNS42LTEyLjUtMTIuNS0xMi41eiIgZmlsbD0iIzMzNzJlNiIvPgogIDxjaXJjbGUgY3g9IjEyLjUiIGN5PSIxMi41IiByPSI0IiBmaWxsPSIjZmZmIi8+Cjwvc3ZnPg==',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  className: 'fix-marker-size'
-});
+import { customIcon, guestIcon } from "@/lib/customIcons";
 
 export default function Map() {
   const { position, shareId, isLoading, handleShareStart, handleShareStop, guestPosition } = useLocationSession();
