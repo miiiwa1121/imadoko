@@ -126,6 +126,8 @@ export function useLocationSession() {
              const newData = payload.new as SessionPayload;
              if (newData.guest_lat && newData.guest_lng) {
                setGuestPosition([newData.guest_lat, newData.guest_lng]);
+             } else {
+               setGuestPosition(null);
              }
         })
         .subscribe();
