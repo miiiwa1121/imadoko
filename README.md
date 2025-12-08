@@ -5,8 +5,6 @@
 [![Demo](https://img.shields.io/badge/Demo-Launch_App-blue?style=for-the-badge&logo=vercel)](https://imadoko.vercel.app/)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-[English Version is below](#imadoko-share-english-version)
-
 **「今どこ？」を解決する、最もシンプルな位置情報共有アプリ。**
 
 Imadoko Shareは、アプリのインストールやアカウント登録なしで、発行されたURLを送るだけでリアルタイムに位置情報を共有できるWebサービスです。
@@ -31,65 +29,7 @@ Imadoko Shareは、アプリのインストールやアカウント登録なし�
 * **Icons**: [Lucide React](https://lucide.dev/)
 * **Deployment**: [Vercel](https://vercel.com/)
 
-## 🚀 ローカルでの実行方法
-
-このプロジェクトをあなたのPCで動かすための手順です。
-
-### 1. リポジトリのクローン
-```bash
-git clone [https://github.com/miiiwa1121/imadoko.git](https://github.com/miiiwa1121/imadoko.git)
-cd imadoko
-
-### 2\. 依存関係のインストール
-
-```bash
-npm install
-```
-
-### 3\. 環境変数の設定
-
-ルートディレクトリに `.env.local` ファイルを作成し、Supabaseのキーを設定してください。
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### 4\. Supabaseのセットアップ
-
-SupabaseのSQLエディタで以下のクエリを実行し、必要なテーブルを作成します。
-
-```sql
--- テーブルの作成
-CREATE TABLE sessions (
-    id text PRIMARY KEY,
-    created_at timestamptz DEFAULT now(),
-    lat float8,
-    lng float8,
-    guest_lat float8,
-    guest_lng float8,
-    status text DEFAULT 'active'
-);
-
--- リアルタイム機能の有効化
-alter publication supabase_realtime add table sessions;
-
--- セキュリティポリシー（開発用: 全アクセス許可）
-alter table sessions enable row level security;
-create policy "Enable access to all users" on "sessions" for all using (true) with check (true);
-```
-
-### 5\. 開発サーバーの起動
-
-```bash
-npm run dev
-```
-
-ブラウザで `http://localhost:3000` にアクセスして動作を確認してください。
-
------
-
-\<a id="imadoko-share-english-version"\>\</a\>
+---
 
 # English Version
 
@@ -118,67 +58,6 @@ Imadoko Share is a web-based service that allows you to share your real-time loc
   * **Icons**: [Lucide React](https://lucide.dev/)
   * **Deployment**: [Vercel](https://vercel.com/)
 
-## 🚀 Getting Started
-
-Follow these steps to run the project locally.
-
-### 1\. Clone the repository
-
-```bash
-git clone [https://github.com/miiiwa1121/imadoko.git](https://github.com/miiiwa1121/imadoko.git)
-cd imadoko
-```
-
-### 2\. Install dependencies
-
-```bash
-npm install
-```
-
-### 3\. Set up Environment Variables
-
-Create a `.env.local` file in the root directory and add your Supabase credentials.
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### 4\. Supabase Setup
-
-Run the following SQL query in your Supabase SQL Editor to create the necessary table.
-
-```sql
--- Create table
-CREATE TABLE sessions (
-    id text PRIMARY KEY,
-    created_at timestamptz DEFAULT now(),
-    lat float8,
-    lng float8,
-    guest_lat float8,
-    guest_lng float8,
-    status text DEFAULT 'active'
-);
-
--- Enable Realtime
-alter publication supabase_realtime add table sessions;
-
--- RLS Policy (For development: allow all access)
-alter table sessions enable row level security;
-create policy "Enable access to all users" on "sessions" for all using (true) with check (true);
-```
-
-### 5\. Run the Development Server
-
-```bash
-npm run dev
-```
-
-Open `http://localhost:3000` with your browser to see the result.
-
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-```
-```
