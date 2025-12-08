@@ -3,7 +3,6 @@
 import { Marker, Popup } from "react-leaflet";
 import { LatLngExpression, divIcon } from "leaflet";
 import { User, MapPin } from 'lucide-react'; // 使いたいアイコンをインポート
-import { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 type CustomMarkerProps = {

@@ -21,6 +21,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // エラー変数をコンソールに出力することで「未使用変数」の警告を回避します
+    console.error("API Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

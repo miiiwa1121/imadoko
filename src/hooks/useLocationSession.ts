@@ -3,6 +3,13 @@ import { LatLngExpression } from "leaflet";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 
+// 型定義を追加
+type SessionPayload = {
+  guest_lat?: number;
+  guest_lng?: number;
+  [key: string]: unknown; // 他のフィールドも許容
+};
+
 export function useLocationSession() {
   const [position, setPosition] = useState<LatLngExpression | null>(null);
   const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null);
@@ -95,7 +102,7 @@ export function useLocationSession() {
 
   // 復元ロジック（リロード対策）
   useEffect(() => {
-    // ★変更: sessionStorageから復元
+    // sessionStorageから復元
     const storedShareId = sessionStorage.getItem("shareId");
     if (storedShareId) {
       setShareId(storedShareId);
@@ -116,7 +123,7 @@ export function useLocationSession() {
       const channel = supabase
         .channel(`session-${shareId}`)
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${shareId}` }, (payload) => {
-             const newData = payload.new as any;
+             const newData = payload.new as SessionPayload;
              if (newData.guest_lat && newData.guest_lng) {
                setGuestPosition([newData.guest_lat, newData.guest_lng]);
              }
