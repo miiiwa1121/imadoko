@@ -25,8 +25,7 @@ export default function ShareMap({
       center={centerPosition}
       zoom={15}
       minZoom={3}
-      maxBounds={[[-90, -180], [90, 180]]}
-      maxBoundsViscosity={1.0}
+      worldCopyJump={true}
       scrollWheelZoom={true}
       style={{ height: "100vh", width: "100%" }}
       className="z-0"
@@ -34,7 +33,6 @@ export default function ShareMap({
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        noWrap={true}
       />
 
       {/* ホストのマーカー（赤） */}
