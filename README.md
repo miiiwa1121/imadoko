@@ -1,5 +1,7 @@
 # Imadoko Share (イマドコシェア)
 
+＊これは個人開発のサービスであり、予告なく停止する場合があります
+
 # 日本語版
 
 [![Demo](https://img.shields.io/badge/Demo-Launch_App-blue?style=for-the-badge&logo=vercel)](https://imadoko.vercel.app/)

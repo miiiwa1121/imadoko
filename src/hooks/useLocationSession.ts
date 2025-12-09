@@ -3,11 +3,11 @@ import { LatLngExpression } from "leaflet";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 
-// 型定義を追加
+// DBからのペイロードの型定義
 type SessionPayload = {
-  guest_lat?: number;
-  guest_lng?: number;
-  [key: string]: unknown; // 他のフィールドも許容
+  guest_lat?: number | null;
+  guest_lng?: number | null;
+  [key: string]: unknown;
 };
 
 export function useLocationSession() {
@@ -17,14 +17,14 @@ export function useLocationSession() {
   const [isLoading, setIsLoading] = useState(true);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 位置情報をDBに更新する関数
+  // ホスト位置更新 & ステータス維持
   const updateHostLocation = async (currentShareId: string) => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         setPosition([latitude, longitude]);
 
-        // ステータスを 'active' に上書きし続ける（リロード復帰用）
+        // リロード復帰直後などに stopped にならないよう active を上書きし続ける
         const { error } = await supabase
           .from("sessions")
           .update({ 
@@ -41,8 +41,10 @@ export function useLocationSession() {
     );
   };
 
+  // 共有開始
   const handleShareStart = async () => {
     const newShareId = nanoid(10);
+    
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -57,7 +59,7 @@ export function useLocationSession() {
 
         if (!error) {
           setShareId(newShareId);
-          // ★変更: sessionStorageを使う（タブを閉じると消えるが、リロードでは残る）
+          // ★修正: sessionStorageを使用（タブ閉じで消え、リロードで残る）
           if (typeof window !== "undefined") {
             sessionStorage.setItem("shareId", newShareId);
           }
@@ -69,50 +71,49 @@ export function useLocationSession() {
       },
       (err) => {
         console.error(err);
+        alert("位置情報の取得に失敗しました");
         setIsLoading(false);
       }
     );
   };
 
+  // 共有停止（ボタン操作）
   const handleShareStop = async () => {
     if (intervalIdRef.current) clearInterval(intervalIdRef.current);
     if (shareId) {
       await supabase.from("sessions").update({ status: "stopped" }).eq("id", shareId);
     }
-    // ★変更: sessionStorageから削除
     sessionStorage.removeItem("shareId");
     setShareId(null);
     setPosition(null);
     setGuestPosition(null);
   };
 
-  // タブを閉じる（またはリロード）直前の処理
+  // タブ閉じ（自動停止）対策
   useEffect(() => {
     const handleTabClose = () => {
       if (shareId) {
-        // APIに「停止」信号を送る
+        // サーバーに停止信号を送る
         const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
         navigator.sendBeacon("/api/stop-sharing", blob);
       }
     };
-
     window.addEventListener("pagehide", handleTabClose);
     return () => window.removeEventListener("pagehide", handleTabClose);
   }, [shareId]);
 
-  // 復元ロジック（リロード対策）
+  // リロード復帰ロジック
   useEffect(() => {
-    // sessionStorageから復元
+    // ★修正: sessionStorageから復元
     const storedShareId = sessionStorage.getItem("shareId");
     if (storedShareId) {
       setShareId(storedShareId);
-      // リロード直後、即座に「active」で上書きして停止信号を打ち消す
-      updateHostLocation(storedShareId);
+      updateHostLocation(storedShareId); // 即座に生存報告
     }
     setIsLoading(false);
   }, []);
 
-  // 定期更新
+  // 定期更新 & ゲスト監視
   useEffect(() => {
     if (shareId) {
       if (intervalIdRef.current) clearInterval(intervalIdRef.current);
@@ -122,14 +123,20 @@ export function useLocationSession() {
 
       const channel = supabase
         .channel(`session-${shareId}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${shareId}` }, (payload) => {
-             const newData = payload.new as SessionPayload;
-             if (newData.guest_lat && newData.guest_lng) {
-               setGuestPosition([newData.guest_lat, newData.guest_lng]);
-             } else {
-               setGuestPosition(null);
-             }
-        })
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${shareId}` },
+          (payload) => {
+            const newData = payload.new as SessionPayload;
+            
+            // ★修正: ゲスト位置がある場合のみセット、無ければ(null)消す
+            if (newData.guest_lat && newData.guest_lng) {
+              setGuestPosition([newData.guest_lat, newData.guest_lng]);
+            } else {
+              setGuestPosition(null); // これで青ピンが消えます
+            }
+          }
+        )
         .subscribe();
 
       return () => {

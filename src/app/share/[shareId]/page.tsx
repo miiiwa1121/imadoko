@@ -6,13 +6,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
-import { Power, RefreshCw } from "lucide-react"; // アイコン用
+import { Power, RefreshCw } from "lucide-react";
 
 type PageProps = {
   params: Promise<{ shareId: string }>;
 };
 
-// DBの型定義
 type SessionPayload = {
   lat?: number;
   lng?: number;
@@ -26,7 +25,7 @@ export default function SharePage({ params }: PageProps) {
   const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null);
   const [displayStatus, setDisplayStatus] = useState<string>("loading");
   
-  // ゲスト側の共有状態管理（デフォルトはON）
+  // 共有スイッチ（デフォルトON）
   const [isSharing, setIsSharing] = useState(true);
   
   const stopTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -41,7 +40,6 @@ export default function SharePage({ params }: PageProps) {
     []
   );
 
-  // ホストの状態変化をハンドリング
   const handleStatusChange = useCallback((newStatus: string) => {
     if (newStatus === "active") {
       if (stopTimerRef.current) {
@@ -50,7 +48,6 @@ export default function SharePage({ params }: PageProps) {
       }
       setDisplayStatus("active");
     } else if (newStatus === "stopped") {
-      // リロード対策の猶予時間
       if (!stopTimerRef.current && displayStatus !== "stopped") {
         stopTimerRef.current = setTimeout(() => {
           setDisplayStatus("stopped");
@@ -59,9 +56,8 @@ export default function SharePage({ params }: PageProps) {
     }
   }, [displayStatus]);
 
-  // ゲストの位置送信処理
   const updateGuestLocation = useCallback(async () => {
-    // 共有OFFなら送信しない
+    // 停止中は送信しない
     if (!isSharing) return;
 
     navigator.geolocation.getCurrentPosition(
@@ -76,28 +72,24 @@ export default function SharePage({ params }: PageProps) {
       (err) => console.error(err),
       { enableHighAccuracy: true }
     );
-  }, [shareId, isSharing]); // isSharingに依存させる
+  }, [shareId, isSharing]);
 
-  // ゲスト側からの共有停止（ボタン用）
+  // ゲストによる手動停止
   const handleGuestStop = async () => {
     setIsSharing(false);
-    setGuestPosition(null); // 自分の画面からも消す
-    
-    // DB上の自分の位置を消すAPIを呼ぶ
+    setGuestPosition(null);
+    // DBから自分の位置を消す
     await fetch("/api/guest-leave", {
       method: "POST",
       body: JSON.stringify({ shareId }),
     });
   };
 
-  // ゲスト側からの共有再開（ボタン用）
   const handleGuestStart = () => {
     setIsSharing(true);
-    // 即座に位置取得・送信をトリガー
-    // ※useEffectの依存配列にisSharingが入っているため、自動的に再開もされるが、念のため
+    // updateGuestLocationはuseEffectで定期実行されるのでフラグを変えるだけでOK
   };
 
-  // メインの処理
   useEffect(() => {
     const fetchInitialSession = async () => {
       const { data, error } = await supabase
@@ -111,18 +103,14 @@ export default function SharePage({ params }: PageProps) {
       } else {
         setDisplayStatus(data.status);
         if (data.lat && data.lng) setHostPosition([data.lat, data.lng]);
-        // 自分が再参加した場合は、自分の位置は再取得するのでここでのセットは不要だが
-        // 他のゲストがいる場合は考慮が必要（今回は1対1想定なのでスキップ）
+        // 自分が再開したときのために、初期位置はセットしない（updateGuestLocationに任せる）
       }
     };
 
     fetchInitialSession();
-
-    // 位置情報の定期送信（isSharingがtrueの時だけ機能する）
     updateGuestLocation();
     guestIntervalRef.current = setInterval(updateGuestLocation, 10000);
 
-    // リアルタイム監視
     const channel = supabase
       .channel(`session-channel-${shareId}`)
       .on(
@@ -143,21 +131,17 @@ export default function SharePage({ params }: PageProps) {
       if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
       supabase.removeChannel(channel);
     };
-  }, [shareId, handleStatusChange, updateGuestLocation, isSharing]);
+  }, [shareId, handleStatusChange, updateGuestLocation]);
 
-  // タブ閉じ（pagehide）対策
+  // ★修正: タブを閉じた時に確実に退出APIを呼ぶ
   useEffect(() => {
     const handleTabClose = () => {
-      // 共有中かどうかに関わらず、タブが消えるならDBの自分の位置は消しておく
       const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
       navigator.sendBeacon("/api/guest-leave", blob);
     };
     window.addEventListener("pagehide", handleTabClose);
     return () => window.removeEventListener("pagehide", handleTabClose);
   }, [shareId]);
-
-
-  // --- レンダリング ---
 
   if (displayStatus === "loading") return <Spinner />;
 
@@ -185,13 +169,12 @@ export default function SharePage({ params }: PageProps) {
     <div className="w-full h-screen relative">
       <ShareMap 
         hostPosition={hostPosition} 
-        // 共有中なら自分の位置を表示、停止中ならnull
         guestPosition={isSharing ? guestPosition : null}
         hostLabel="ホスト"
         guestLabel="あなた" 
       />
       
-      {/* ゲスト用コントロールパネル */}
+      {/* ゲスト操作パネル */}
       <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-center pointer-events-none">
         <div className="bg-white/90 backdrop-blur px-6 py-3 rounded-full shadow-lg border border-blue-100 pointer-events-auto flex items-center gap-4">
           {isSharing ? (
@@ -200,12 +183,8 @@ export default function SharePage({ params }: PageProps) {
                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                 あなたの位置を共有中
               </p>
-              <button 
-                onClick={handleGuestStop}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1"
-              >
-                <Power size={14} />
-                停止
+              <button onClick={handleGuestStop} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1">
+                <Power size={14} /> 停止
               </button>
             </>
           ) : (
@@ -214,12 +193,8 @@ export default function SharePage({ params }: PageProps) {
                 <span className="w-2 h-2 rounded-full bg-gray-400"></span>
                 位置情報の共有を停止中
               </p>
-              <button 
-                onClick={handleGuestStart}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1"
-              >
-                <RefreshCw size={14} />
-                再開
+              <button onClick={handleGuestStart} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1">
+                <RefreshCw size={14} /> 再開
               </button>
             </>
           )}
