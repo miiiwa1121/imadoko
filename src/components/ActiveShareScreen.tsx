@@ -106,7 +106,7 @@ export default function ActiveShareScreen({
                 style={{ backgroundColor: me.color }} 
                 className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
               ></div>
-              <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : "わたし"}</p>
+              <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : (me.name.startsWith("P") ? "わたし" : me.name)}</p>
             </button>
           )}
         </div>

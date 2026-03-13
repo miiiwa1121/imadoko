@@ -66,7 +66,7 @@ export default function ShareMap({
         if (p.lat === null || p.lng === null) return null;
         const isSelf = p.id === myId;
         const isHost = p.name === "ホスト";
-        const label = isHost ? "ホスト" : (isSelf ? "わたし" : p.name);
+        const label = isHost ? "ホスト" : ((isSelf && p.name.startsWith('P')) ? "わたし" : p.name);
         
         return (
           <CustomMarker 
