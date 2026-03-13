@@ -58,10 +58,10 @@ export default function ShareMap({
     >
       <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
-        attribution="&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>"
-        url="https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"
-      />
-      
+        attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      />      
+    
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;
         const isSelf = p.id === myId;
