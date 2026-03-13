@@ -79,7 +79,7 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               placeholder={(popupText === "わたし" || /^P\d+$/.test(popupText)) ? "わたし" : "名前を入力"}
-              className="w-full text-center font-bold text-gray-800 border-b border-gray-300 focus:border-blue-500 focus:outline-none bg-transparent"
+              className="w-full text-[16px] text-center font-bold text-gray-800 border-b border-gray-300 focus:border-blue-500 focus:outline-none bg-transparent"
             />
           ) : (
             <span className="font-bold text-gray-800">{popupText}</span>

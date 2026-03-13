@@ -25,7 +25,7 @@ html, body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   overscroll-behavior: none; /* 「引っ張って更新」や「スワイプで戻る」を禁止 */
-  touch-action: manipulation; /* ダブルタップによる意図しないズームを防止 */
+  touch-action: pan-x pan-y; /* ピンチズームを完全に無効化し、縦横スクロールのみ許可 */
   -webkit-user-select: none; /* テキスト選択による画面崩れ防止 */
   user-select: none;
 }
