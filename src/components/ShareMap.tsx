@@ -1,22 +1,37 @@
 "use client";
 
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import CustomMarker from "@/components/CustomMarker";
+import { useEffect } from "react";
 
 export type ShareMapProps = {
   hostPosition: LatLngExpression | null;
   guestPosition: LatLngExpression | null;
-  // ▼ 追加: ピンのラベル文字を自由に設定できるようにする
+  // ピンのラベル文字を自由に設定できるようにする
   hostLabel?: string;
   guestLabel?: string;
+  focusLocation?: LatLngExpression | null;
+  focusKey?: number;
 };
+
+function MapUpdater({ focusLocation, focusKey }: { focusLocation?: LatLngExpression | null, focusKey?: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (focusLocation) {
+      map.flyTo(focusLocation, 16, { duration: 1.5 });
+    }
+  }, [focusLocation, focusKey, map]);
+  return null;
+}
 
 export default function ShareMap({ 
   hostPosition, 
   guestPosition,
   hostLabel = "ホスト",   // デフォルト値
-  guestLabel = "ゲスト"   // デフォルト値
+  guestLabel = "ゲスト",  // デフォルト値
+  focusLocation,
+  focusKey
 }: ShareMapProps) {
   const centerPosition: LatLngExpression = hostPosition || guestPosition || [35.681236, 139.767125];
 
@@ -30,6 +45,7 @@ export default function ShareMap({
       style={{ height: "100vh", width: "100%" }}
       className="z-0"
     >
+      <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
         attribution="&copy; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors"
         url="https://tile.openstreetmap.jp/{z}/{x}/{y}.png"

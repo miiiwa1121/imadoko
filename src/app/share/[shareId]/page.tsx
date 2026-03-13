@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useGuestSession } from "@/hooks/useGuestSession";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
 import { Power, RefreshCw } from "lucide-react";
+import { LatLngExpression } from "leaflet";
 
 type PageProps = {
   params: Promise<{ shareId: string }>;
@@ -17,6 +18,16 @@ export default function SharePage({ params }: PageProps) {
   
   // カスタムフックからすべての状態と機能を受け取る
   const { hostPosition, guestPosition, displayStatus, isSharing, handleGuestStart, handleGuestStop } = useGuestSession(shareId);
+
+  const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
+  const [focusKey, setFocusKey] = useState(0);
+
+  const handleFocus = (loc: LatLngExpression | null) => {
+    if (loc) {
+      setFocusLocation(loc);
+      setFocusKey((prev) => prev + 1);
+    }
+  };
 
   // 地図の動的インポート
   const ShareMap = useMemo<React.ComponentType<ShareMapProps>>(
@@ -58,7 +69,31 @@ export default function SharePage({ params }: PageProps) {
         guestPosition={isSharing ? guestPosition : null}
         hostLabel="ホスト"
         guestLabel="あなた" 
+        focusLocation={focusLocation}
+        focusKey={focusKey}
       />
+
+      {/* フォーカスボタン */}
+      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2">
+        <button
+          onClick={() => handleFocus(guestPosition)}
+          disabled={!isSharing || !guestPosition}
+          className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-3 rounded-full transition-colors disabled:opacity-50"
+          title="自分の位置"
+        >
+          <div className="w-4 h-4 rounded-full bg-blue-500 mx-auto mb-1 border-2 border-white shadow-sm"></div>
+          <p className="text-[10px] font-bold">あなた</p>
+        </button>
+        <button
+          onClick={() => handleFocus(hostPosition)}
+          disabled={!hostPosition}
+          className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-3 rounded-full transition-colors disabled:opacity-50"
+          title="ホストの位置"
+        >
+          <div className="w-4 h-4 rounded-full bg-red-500 mx-auto mb-1 border-2 border-white shadow-sm"></div>
+          <p className="text-[10px] font-bold">ホスト</p>
+        </button>
+      </div>
       
       {/* ゲスト操作パネル */}
       <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-center pointer-events-none">
