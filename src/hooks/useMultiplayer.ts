@@ -72,7 +72,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     
     // Fetch initial participants
     fetchParticipants(currentSessionId);
-  }, []);
+  }, [isHost]);
 
   const fetchParticipants = async (currentSessionId: string) => {
     const { data } = await supabase
@@ -115,7 +115,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   useEffect(() => {
     if (!sessionId) return;
     
-    // If guest, fetch session status first
+    // If guest, fetch session status first, otherwise if host join immediately
     if (!isHost) {
       supabase.from("sessions").select("status").eq("id", sessionId).single().then(({ data }) => {
         if (data && data.status !== "stopped") {
@@ -125,6 +125,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
           setSessionStatus("stopped");
         }
       });
+    } else {
+      // Host automatically joins the session on mount/reload if sessionId exists
+      joinSession(sessionId);
     }
 
     // Channels for real-time
