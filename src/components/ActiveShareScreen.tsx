@@ -10,15 +10,15 @@ import Spinner from "@/components/Spinner";
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
 const MAP_STYLES = [
-  { name: "標準地図 (OSM)", url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
-  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>' },
-  { name: "白地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png", attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>' },
-  { name: "写真 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>' },
-  { name: "ダークモード (CARTO)", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' },
-  { name: "ライトモード (CARTO)", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' },
-  { name: "地形図 (Esri)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community' },
-  { name: "衛星画像 (Esri)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community' },
-  { name: "水彩画風 (Stamen)", url: "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg", attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+  { name: "① 国土地理院 淡色地図", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
+  { name: "② 国土地理院 標準地図", url: "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
+  { name: "③ 国土地理院 航空写真", url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
+  { name: "④ OpenStreetMap Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors" },
+  { name: "⑤ CARTO Voyager (現代風)", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
+  { name: "⑥ CARTO Positron (白基調)", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
+  { name: "⑦ CARTO Dark Matter (黒基調)", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
+  { name: "⑧ Esri World Imagery (衛星)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "Tiles &copy; Esri" },
+  { name: "⑨ OpenTopoMap (地形)", url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attribution: "Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenTopoMap" }
 ];
 
 type Props = {
@@ -98,7 +98,7 @@ export default function ActiveShareScreen({
         <select
           value={mapStyleIndex}
           onChange={(e) => setMapStyleIndex(Number(e.target.value))}
-          className="bg-white/90 backdrop-blur shadow-md text-gray-700 text-sm py-1 px-2 rounded-md border border-gray-200 outline-none"
+          className="bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-md text-xs font-bold text-gray-700 border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {MAP_STYLES.map((style, i) => (
             <option key={i} value={i}>{style.name}</option>
