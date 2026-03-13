@@ -23,7 +23,7 @@ export default function ActiveShareScreen({
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopyLink = async () => {
-    const url = `${window.location.origin}/guest/${shareId}`;
+    const url = `${window.location.origin}/share/${shareId}`;
     await navigator.clipboard.writeText(url);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
