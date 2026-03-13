@@ -36,7 +36,7 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
 
   return (
     <Marker position={position} icon={customIcon}>
-      <Popup className="font-sans font-medium min-w-[120px]">
+      <Popup className="font-sans font-medium min-w-[120px]" closeButton={false}>
         <div className="text-center flex flex-col gap-2 items-center">
           <span className="font-bold text-gray-800">{popupText}</span>
           {isSelf && onEditName && (
