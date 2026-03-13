@@ -22,7 +22,7 @@ const MAP_STYLES = [
   { name: "傾斜量図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/slopemap/](https://cyberjapandata.gsi.go.jp/xyz/slopemap/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
   { name: "アナグリフ (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/anaglyphmap_color/](https://cyberjapandata.gsi.go.jp/xyz/anaglyphmap_color/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
   
-  // その他 (3種)；
+  // その他 (3種)
   { name: "OSM Japan", url: "[https://tile.openstreetmap.jp/](https://tile.openstreetmap.jp/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://www.openstreetmap.org/copyright](https://www.openstreetmap.org/copyright)' target='_blank'>OpenStreetMap</a> contributors" },
   { name: "CARTO Voyager", url: "https://{s}[.basemaps.cartocdn.com/rastertiles/voyager/](https://.basemaps.cartocdn.com/rastertiles/voyager/){z}/{x}/{y}{r}.png", attribution: "&copy; <a href='[https://carto.com/attributions](https://carto.com/attributions)'>CARTO</a>" },
   { name: "Esri World Imagery", url: "[https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/){z}/{y}/{x}", attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community" }
