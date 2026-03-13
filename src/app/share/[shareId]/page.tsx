@@ -28,7 +28,7 @@ export default function SharePage({ params }: PageProps) {
 
   const me = participants.find(p => p.id === myId);
   const host = participants.find(p => p.name === "ホスト");
-  const others = participants.filter(p => !me || p.id !== me.id);
+  const others = participants.filter(p => p.id !== myId && p.name !== "ホスト");
 
   // マップフォーカス制御
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
