@@ -32,6 +32,12 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       const storedStr = sessionStorage.getItem(profileKey);
       let profile = storedStr ? JSON.parse(storedStr) : null;
 
+      // 事前取得した座標があれば利用する
+      const lastLatStr = sessionStorage.getItem("last_lat");
+      const lastLngStr = sessionStorage.getItem("last_lng");
+      const initialLat = lastLatStr ? parseFloat(lastLatStr) : null;
+      const initialLng = lastLngStr ? parseFloat(lastLngStr) : null;
+
       if (profile) {
         if (!isHost && profile.name === "ホスト") {
           profile.name = `P${profile.num || Math.floor(Math.random() * 100)}`;
@@ -44,7 +50,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
           session_id: currentSessionId,
           participant_num: profile.num,
           name: profile.name,
-          color: profile.color
+          color: profile.color,
+          lat: initialLat,
+          lng: initialLng
         });
       } else {
         // 新規参加
@@ -73,7 +81,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
           session_id: currentSessionId,
           participant_num: profile.num,
           name: profile.name,
-          color: profile.color
+          color: profile.color,
+          lat: initialLat,
+          lng: initialLng
         });
 
         // 自分のプロフィール一式をブラウザに記憶させておく

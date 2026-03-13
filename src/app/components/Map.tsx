@@ -24,7 +24,11 @@ export default function Map() {
     // ユーザーがタップする頃には取得が終わっているので、爆速で表示されます。
     if (typeof window !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        () => { console.log("GPSウォームアップ完了"); },
+        (pos) => { 
+          sessionStorage.setItem("last_lat", pos.coords.latitude.toString());
+          sessionStorage.setItem("last_lng", pos.coords.longitude.toString());
+          console.log("GPSウォームアップ完了", pos.coords); 
+        },
         (err) => { console.error("GPSウォームアップ失敗", err); },
         { enableHighAccuracy: true, maximumAge: 60000, timeout: 5000 }
       );
