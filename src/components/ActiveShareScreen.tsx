@@ -60,8 +60,7 @@ export default function ActiveShareScreen({
     }
   }, [host?.lat, host?.lng, hasInitialFocus, handleFocus]);
 
-  const handleEditName = () => {
-    const newName = window.prompt("新しい名前を入力してください:");
+  const handleEditName = (newName: string) => {
     if (newName && newName.trim() !== "") {
       if (newName.trim() === "ホスト") {
         alert("その名前は使用できません");

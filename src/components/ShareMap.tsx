@@ -18,7 +18,7 @@ export type ShareMapProps = {
   myId: string;
   focusLocation?: LatLngExpression | null;
   focusKey?: number;
-  onEditName?: () => void;
+  onEditName?: (newName: string) => void;
 };
 
 function MapUpdater({ focusLocation, focusKey }: { focusLocation?: LatLngExpression | null, focusKey?: number }) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, KeyboardEvent } from "react";
 import { Marker, Popup } from "react-leaflet";
 import { LatLngExpression, divIcon } from "leaflet";
 import { User, MapPin } from 'lucide-react';
@@ -10,10 +11,19 @@ export type CustomMarkerProps = {
   color: string;
   popupText: string;
   isSelf: boolean;
-  onEditName?: () => void;
+  onEditName?: (newName: string) => void;
 };
 
 export default function CustomMarker({ position, color, popupText, isSelf, onEditName }: CustomMarkerProps) {
+  const [inputValue, setInputValue] = useState(popupText === "わたし" ? "" : popupText);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setInputValue(popupText === "わたし" ? "" : popupText);
+    }
+  }, [popupText, isEditing]);
+
   const IconComponent = isSelf ? MapPin : User;
   
   const iconMarkup = renderToStaticMarkup(
@@ -34,21 +44,38 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
     popupAnchor: [0, -46], 
   });
 
+  const handleBlur = () => {
+    setIsEditing(false);
+    if (onEditName && inputValue.trim() !== "") {
+      onEditName(inputValue.trim());
+    } else {
+      setInputValue(popupText === "わたし" ? "" : popupText);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <Marker position={position} icon={customIcon}>
       <Popup className="font-sans font-medium min-w-[120px]" closeButton={false}>
         <div className="text-center flex flex-col gap-2 items-center">
-          <span className="font-bold text-gray-800">{popupText}</span>
-          {isSelf && onEditName && (
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditName();
-              }}
-              className="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors"
-            >
-              名前を変更
-            </button>
+          {onEditName ? (
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onFocus={() => setIsEditing(true)}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              placeholder={popupText === "わたし" ? "わたし" : "名前を入力"}
+              className="w-full text-center font-bold text-gray-800 border-b border-gray-300 focus:border-blue-500 focus:outline-none bg-transparent"
+            />
+          ) : (
+            <span className="font-bold text-gray-800">{popupText}</span>
           )}
         </div>
       </Popup>
