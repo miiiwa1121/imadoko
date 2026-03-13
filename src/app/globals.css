@@ -20,8 +20,18 @@
   }
 }
 
-body {
+html, body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overscroll-behavior: none; /* 「引っ張って更新」や「スワイプで戻る」を禁止 */
+  touch-action: manipulation; /* ダブルタップによる意図しないズームを防止 */
+  -webkit-user-select: none; /* テキスト選択による画面崩れ防止 */
+  user-select: none;
+}
+
+/* input等の入力欄はテキスト選択を許可する */
+input, textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
 }
