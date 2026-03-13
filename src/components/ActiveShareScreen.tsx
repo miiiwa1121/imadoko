@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps } from "@/components/ShareMap";
+import { Power, Copy, Check } from "lucide-react";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
@@ -30,32 +31,40 @@ export default function ActiveShareScreen({
   };
 
   return (
-    <div className="h-screen w-full flex flex-col">
-      <div className="p-4 bg-white shadow-md z-[1000]">
-        <p className="font-semibold mb-2">共有リンクが作成されました！</p>
-        <div className="flex gap-2">
-          <button
-            onClick={handleCopyLink}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-          >
-            {isCopied ? "コピー済み！" : "リンクをコピー"}
-          </button>
-          <button
-            onClick={handleShareStop}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
-          >
-            共有を停止
-          </button>
-        </div>
-      </div>
+    <div className="w-full h-screen relative">
+      <ShareMap
+        hostPosition={position}
+        guestPosition={guestPosition}
+        hostLabel="あなた"
+        guestLabel="相手"
+      />
 
-      <div className="flex-1">
-        <ShareMap
-          hostPosition={position}
-          guestPosition={guestPosition}
-          hostLabel="あなた"
-          guestLabel="相手"
-        />
+      {/* ホスト操作パネル */}
+      <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-center pointer-events-none">
+        <div className="bg-white/90 backdrop-blur px-6 py-3 rounded-full shadow-lg border border-blue-100 pointer-events-auto flex items-center gap-4">
+          <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            あなたの位置を共有中
+          </p>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={handleCopyLink}
+              className={`${
+                isCopied ? "bg-green-500 text-white" : "bg-blue-500 hover:bg-blue-600 text-white"
+              } px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1`}
+            >
+              {isCopied ? <Check size={14} /> : <Copy size={14} />} 
+              {isCopied ? "コピー済み" : "リンク"}
+            </button>
+            <button
+              onClick={handleShareStop}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1"
+            >
+              <Power size={14} /> 停止
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
