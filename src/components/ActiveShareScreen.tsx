@@ -10,15 +10,22 @@ import Spinner from "@/components/Spinner";
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
 const MAP_STYLES = [
-  { name: "① 国土地理院 淡色地図", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
-  { name: "② 国土地理院 標準地図", url: "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
-  { name: "③ 国土地理院 航空写真", url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
-  { name: "④ OpenStreetMap Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors" },
-  { name: "⑤ CARTO Voyager (現代風)", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
-  { name: "⑥ CARTO Positron (白基調)", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
-  { name: "⑦ CARTO Dark Matter (黒基調)", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
-  { name: "⑧ Esri World Imagery (衛星)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "Tiles &copy; Esri" },
-  { name: "⑨ OpenTopoMap (地形)", url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attribution: "Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenTopoMap" }
+  // 国土地理院 (10種)
+  { name: "淡色地図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/pale/](https://cyberjapandata.gsi.go.jp/xyz/pale/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "標準地図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/std/](https://cyberjapandata.gsi.go.jp/xyz/std/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "白地図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/blank/](https://cyberjapandata.gsi.go.jp/xyz/blank/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "英語地図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/english/](https://cyberjapandata.gsi.go.jp/xyz/english/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "航空写真 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/](https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/){z}/{x}/{y}.jpg", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "1974-78年写真 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/gazo1/](https://cyberjapandata.gsi.go.jp/xyz/gazo1/){z}/{x}/{y}.jpg", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "色別標高図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/relief/](https://cyberjapandata.gsi.go.jp/xyz/relief/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "陰影起伏図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/hillshademap/](https://cyberjapandata.gsi.go.jp/xyz/hillshademap/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "傾斜量図 (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/slopemap/](https://cyberjapandata.gsi.go.jp/xyz/slopemap/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  { name: "アナグリフ (GSI)", url: "[https://cyberjapandata.gsi.go.jp/xyz/anaglyphmap_color/](https://cyberjapandata.gsi.go.jp/xyz/anaglyphmap_color/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://maps.gsi.go.jp/development/ichiran.html](https://maps.gsi.go.jp/development/ichiran.html)' target='_blank'>国土地理院</a>" },
+  
+  // その他 (3種)
+  { name: "OSM Japan", url: "[https://tile.openstreetmap.jp/](https://tile.openstreetmap.jp/){z}/{x}/{y}.png", attribution: "&copy; <a href='[https://www.openstreetmap.org/copyright](https://www.openstreetmap.org/copyright)' target='_blank'>OpenStreetMap</a> contributors" },
+  { name: "CARTO Voyager", url: "https://{s}[.basemaps.cartocdn.com/rastertiles/voyager/](https://.basemaps.cartocdn.com/rastertiles/voyager/){z}/{x}/{y}{r}.png", attribution: "&copy; <a href='[https://carto.com/attributions](https://carto.com/attributions)'>CARTO</a>" },
+  { name: "Esri World Imagery", url: "[https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/){z}/{y}/{x}", attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community" }
 ];
 
 type Props = {
