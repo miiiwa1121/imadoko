@@ -137,7 +137,7 @@ export default function SharePage({ params }: PageProps) {
                 style={{ backgroundColor: me.color }} 
                 className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
               ></div>
-              <p className="text-[10px] font-bold text-center truncate px-1">{me.name.startsWith("P") ? "わたし" : me.name}</p>
+              <p className="text-[10px] font-bold text-center truncate px-1">{/^P\d+$/.test(me.name) ? "わたし" : me.name}</p>
             </button>
           )}
         </div>

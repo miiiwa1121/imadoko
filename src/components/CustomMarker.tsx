@@ -15,13 +15,12 @@ export type CustomMarkerProps = {
 };
 
 export default function CustomMarker({ position, color, popupText, isSelf, onEditName }: CustomMarkerProps) {
-  const isDefaultName = popupText === "わたし" || popupText.startsWith("P");
-  const [inputValue, setInputValue] = useState(isDefaultName ? "" : popupText);
+  const [inputValue, setInputValue] = useState(popupText);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!isEditing) {
-      setInputValue((popupText === "わたし" || popupText.startsWith("P")) ? "" : popupText);
+      setInputValue(popupText);
     }
   }, [popupText, isEditing]);
 
@@ -45,12 +44,19 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
     popupAnchor: [0, -46], 
   });
 
+  const handleFocus = () => {
+    setIsEditing(true);
+    if (inputValue === "わたし" || /^P\d+$/.test(inputValue)) {
+      setInputValue("");
+    }
+  };
+
   const handleBlur = () => {
     setIsEditing(false);
     if (onEditName && inputValue.trim() !== "") {
       onEditName(inputValue.trim());
     } else {
-      setInputValue((popupText === "わたし" || popupText.startsWith("P")) ? "" : popupText);
+      setInputValue(popupText);
     }
   };
 
@@ -69,10 +75,10 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onFocus={() => setIsEditing(true)}
+              onFocus={handleFocus}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
-              placeholder={(popupText === "わたし" || popupText.startsWith("P")) ? "わたし" : "名前を入力"}
+              placeholder={(popupText === "わたし" || /^P\d+$/.test(popupText)) ? "わたし" : "名前を入力"}
               className="w-full text-center font-bold text-gray-800 border-b border-gray-300 focus:border-blue-500 focus:outline-none bg-transparent"
             />
           ) : (
