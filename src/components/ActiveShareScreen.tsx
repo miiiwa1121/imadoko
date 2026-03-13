@@ -50,7 +50,12 @@ export default function ActiveShareScreen({
       </div>
 
       <div className="flex-1">
-        <ShareMap position={position} guestPosition={guestPosition} />
+        <ShareMap
+          hostPosition={position}
+          guestPosition={guestPosition}
+          hostLabel="あなた"
+          guestLabel="相手"
+        />
       </div>
     </div>
   );
