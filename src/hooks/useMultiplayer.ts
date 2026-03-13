@@ -90,9 +90,26 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         sessionStorage.setItem(profileKey, JSON.stringify(profile));
       }
       
+      // ② 自分のピンの即時表示（楽観的更新）
+      // DBへの保存を待って再取得するのではなく、ローカルの状態にまず追加して表示を早める
+      const myParticipantData: Participant = {
+        id: profile.id,
+        name: profile.name,
+        color: profile.color,
+        lat: initialLat,
+        lng: initialLng
+      };
+      
+      setParticipants(prev => {
+        if (!prev.some(p => p.id === myParticipantData.id)) {
+          return [...prev, myParticipantData];
+        }
+        return prev;
+      });
+
       setMyId(profile.id);
       setIsSharing(true);
-      fetchParticipants(currentSessionId);
+      // 通信の効率化に伴い、ここでの全体再取得(fetchParticipants)は省略・または並行処理で任せる
     } finally {
       isJoiningRef.current = false;
     }
@@ -153,6 +170,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   useEffect(() => {
     if (!sessionId) return;
     
+    // ① 初期読み込みの高速化：ホストのピンなどを参加処理と並行して先行読み込みする
+    fetchParticipants(sessionId);
+    
     if (!isHost) {
       supabase.from("sessions").select("status").eq("id", sessionId).single().then(({ data }) => {
         if (data && data.status !== "stopped") {
@@ -168,8 +188,21 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
 
     const participantsChannel = supabase
       .channel(`participants-${sessionId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, () => {
-        fetchParticipants(sessionId);
+      .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, (payload) => {
+        // ③ 通信の効率化：DBの再取得(fetchParticipants)を待たずに、届いたpayloadで直接状態を更新する
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const updatedParticipant = payload.new as Participant;
+          setParticipants(prev => {
+            const exists = prev.some(p => p.id === updatedParticipant.id);
+            if (exists) {
+              return prev.map(p => p.id === updatedParticipant.id ? updatedParticipant : p);
+            } else {
+              return [...prev, updatedParticipant];
+            }
+          });
+        } else if (payload.eventType === 'DELETE') {
+          setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
+        }
       })
       .subscribe();
 
