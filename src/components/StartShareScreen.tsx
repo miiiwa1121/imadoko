@@ -17,7 +17,7 @@ export default function StartShareScreen({ handleShareStart }: Props) {
         </p>
       </div>
 
-      <div className="flex flex-col items-center mb-10 animate-bounce">
+      <div className="flex flex-col items-center mb-10">
         <div className="bg-blue-600 text-white p-5 rounded-full shadow-lg mb-4">
           <Share2 className="w-10 h-10" />
         </div>
