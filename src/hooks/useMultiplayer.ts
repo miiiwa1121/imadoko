@@ -11,16 +11,8 @@ export type Participant = {
 };
 
 const PALETTE = [
-  "#EF4444", // Red
-  "#3B82F6", // Blue
-  "#10B981", // Emerald
-  "#F59E0B", // Amber
-  "#8B5CF6", // Violet
-  "#EC4899", // Pink
-  "#06B6D4", // Teal
-  "#14B8A6", // Cyan
-  "#F43F5E", // Rose
-  "#84CC16"  // Lime
+  "#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6",
+  "#EC4899", "#06B6D4", "#14B8A6", "#F43F5E", "#84CC16"
 ];
 
 export function useMultiplayer(sessionId: string | null, isHost: boolean = false) {
@@ -29,55 +21,66 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const [sessionStatus, setSessionStatus] = useState<string>("loading");
   const [isSharing, setIsSharing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isJoiningRef = useRef(false);
 
   const joinSession = useCallback(async (currentSessionId: string) => {
-    let storedId = sessionStorage.getItem(`participantId-${currentSessionId}`);
-    
-    // Check if we exist
-    if (storedId) {
-      const { data } = await supabase.from("session_participants").select("*").eq("id", storedId).single();
-      if (!data) storedId = null; // Re-join if deleted somehow
-    }
+    if (isJoiningRef.current) return;
+    isJoiningRef.current = true;
 
-    if (!storedId) {
-      // Need to create new participant
-      storedId = nanoid();
-      
-      const { data: existing } = await supabase
-        .from("session_participants")
-        .select("participant_num, name")
-        .eq("session_id", currentSessionId)
-        .order("participant_num", { ascending: false });
+    try {
+      const profileKey = `profile-${currentSessionId}`;
+      const storedStr = sessionStorage.getItem(profileKey);
+      let profile = storedStr ? JSON.parse(storedStr) : null;
 
-      // ホストが既に存在するかチェック
-      const existingHost = existing?.find(p => p.name === "ホスト");
-      if (isHost && existingHost) {
-        console.warn("Host already exists in this session.");
-        return;
+      if (profile) {
+        // ★自己修復機能①：リロードで削除指令が走っていても、問答無用で「上書き(Upsert)」してデータを復活させる
+        await supabase.from("session_participants").upsert({
+          id: profile.id,
+          session_id: currentSessionId,
+          participant_num: profile.num,
+          name: profile.name,
+          color: profile.color
+        });
+      } else {
+        // 新規参加
+        const { data: existing } = await supabase
+          .from("session_participants")
+          .select("participant_num, name")
+          .eq("session_id", currentSessionId)
+          .order("participant_num", { ascending: false });
+
+        const existingHost = existing?.find(p => p.name === "ホスト");
+        if (isHost && existingHost) return;
+
+        const nextNum = existing && existing.length > 0 ? existing[0].participant_num + 1 : 1;
+        const initialName = isHost ? "ホスト" : `P${nextNum}`;
+        const color = PALETTE[(nextNum - 1) % PALETTE.length];
+
+        profile = {
+          id: nanoid(),
+          num: nextNum,
+          name: initialName,
+          color: color
+        };
+
+        await supabase.from("session_participants").insert({
+          id: profile.id,
+          session_id: currentSessionId,
+          participant_num: profile.num,
+          name: profile.name,
+          color: profile.color
+        });
+
+        // 自分のプロフィール一式をブラウザに記憶させておく
+        sessionStorage.setItem(profileKey, JSON.stringify(profile));
       }
-
-      const nextNum = existing && existing.length > 0 ? existing[0].participant_num + 1 : 1;
-      const initialName = isHost ? "ホスト" : `P${nextNum}`;
-      const color = PALETTE[(nextNum - 1) % PALETTE.length];
-
-      await supabase.from("session_participants").insert({
-        id: storedId,
-        session_id: currentSessionId,
-        participant_num: nextNum,
-        name: initialName,
-        color: color,
-        lat: null,
-        lng: null
-      });
-
-      sessionStorage.setItem(`participantId-${currentSessionId}`, storedId);
+      
+      setMyId(profile.id);
+      setIsSharing(true);
+      fetchParticipants(currentSessionId);
+    } finally {
+      isJoiningRef.current = false;
     }
-    
-    setMyId(storedId);
-    setIsSharing(true);
-    
-    // Fetch initial participants
-    fetchParticipants(currentSessionId);
   }, [isHost]);
 
   const fetchParticipants = async (currentSessionId: string) => {
@@ -85,31 +88,45 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       .from("session_participants")
       .select("*")
       .eq("session_id", currentSessionId);
-    
-    if (data) {
-      setParticipants(data);
-    }
+    if (data) setParticipants(data);
   };
 
   const updateLocation = useCallback(async () => {
-    if (!isSharing || !myId) return;
+    if (!isSharing || !myId || !sessionId) return;
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         
-        // Update local state optimistically
         setParticipants(prev => prev.map(p => 
           p.id === myId ? { ...p, lat: latitude, lng: longitude } : p
         ));
 
-        // Update DB
-        await supabase
+        // ★自己修復機能②：更新時に「自分」がDBから消されていないかチェックする
+        const { data } = await supabase
           .from("session_participants")
           .update({ lat: latitude, lng: longitude })
-          .eq("id", myId);
+          .eq("id", myId)
+          .select("id");
           
-        if (isHost && sessionId) {
+        // もしデータが無かったら（リロード等で消されてしまっていたら）、プロフィールを再挿入！
+        if (data && data.length === 0) {
+          const storedStr = sessionStorage.getItem(`profile-${sessionId}`);
+          if (storedStr) {
+            const profile = JSON.parse(storedStr);
+            await supabase.from("session_participants").upsert({
+              id: profile.id,
+              session_id: sessionId,
+              participant_num: profile.num,
+              name: profile.name,
+              color: profile.color,
+              lat: latitude,
+              lng: longitude
+            });
+          }
+        }
+
+        if (isHost) {
            await supabase.from("sessions").update({ lat: latitude, lng: longitude, status: 'active' }).eq("id", sessionId);
         }
       },
@@ -121,7 +138,6 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   useEffect(() => {
     if (!sessionId) return;
     
-    // If guest, fetch session status first, otherwise if host join immediately
     if (!isHost) {
       supabase.from("sessions").select("status").eq("id", sessionId).single().then(({ data }) => {
         if (data && data.status !== "stopped") {
@@ -132,11 +148,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         }
       });
     } else {
-      // Host automatically joins the session on mount/reload if sessionId exists
       joinSession(sessionId);
     }
 
-    // Channels for real-time
     const participantsChannel = supabase
       .channel(`participants-${sessionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, () => {
@@ -161,10 +175,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     };
   }, [sessionId, isHost, joinSession]);
 
-  // Start sending location
   useEffect(() => {
     if (isSharing && myId) {
-      updateLocation(); // Immediate
+      updateLocation(); 
       intervalRef.current = setInterval(updateLocation, 10000); 
     }
     return () => {
@@ -172,12 +185,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     };
   }, [isSharing, myId, updateLocation]);
 
-
-  // Clean up on tab close
   useEffect(() => {
     const handleTabClose = () => {
       if (myId) {
-        // Beacon to a new delete participant API Route or stop session route
         const blob = new Blob([JSON.stringify({ participantId: myId, sessionId })], { type: "application/json" });
         navigator.sendBeacon("/api/leave-multiplayer", blob);
       }
@@ -187,8 +197,16 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   }, [myId, sessionId]);
 
   const updateMyName = async (newName: string) => {
-    if (!myId) return;
+    if (!myId || !sessionId) return;
     await supabase.from("session_participants").update({ name: newName }).eq("id", myId);
+    
+    // 名前の変更もブラウザに記憶させて、自己修復に備える
+    const storedStr = sessionStorage.getItem(`profile-${sessionId}`);
+    if (storedStr) {
+      const profile = JSON.parse(storedStr);
+      profile.name = newName;
+      sessionStorage.setItem(`profile-${sessionId}`, JSON.stringify(profile));
+    }
   };
   
   const stopSharing = async () => {
