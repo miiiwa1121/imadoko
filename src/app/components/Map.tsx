@@ -10,7 +10,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function Map() {
   const [shareId, setShareId] = useState<string | null>(null);
-  // ★変更：最初はローディングにしない（即座にスタート画面を出すため）
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -19,6 +18,16 @@ export default function Map() {
     const stored = sessionStorage.getItem("hostSessionId");
     if (stored) {
       setShareId(stored);
+    }
+
+    // ★ 改善：スタート画面を開いた瞬間から、裏側でGPSの準備（ウォームアップ）を開始しておく！
+    // ユーザーがタップする頃には取得が終わっているので、爆速で表示されます。
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => { console.log("GPSウォームアップ完了"); },
+        (err) => { console.error("GPSウォームアップ失敗", err); },
+        { enableHighAccuracy: true, maximumAge: 60000, timeout: 5000 }
+      );
     }
   }, []);
 
@@ -60,7 +69,6 @@ export default function Map() {
 
   if (isLoading) return <Spinner />;
 
-  // ★変更：サーバー側での描画時、またはshareIdが無い場合は即座にスタート画面を出す
   if (!isMounted || !shareId) {
     return <StartShareScreen handleShareStart={handleShareStart} />;
   }
