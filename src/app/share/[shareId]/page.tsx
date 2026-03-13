@@ -35,15 +35,15 @@ export default function SharePage({ params }: PageProps) {
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
 
-  // ゲストの場合も、初期表示でホストにフォーカス
+  // ゲストの場合も、初期表示でホスト（または自分）にフォーカス
   useEffect(() => {
-    const targetLat = host?.lat;
-    const targetLng = host?.lng;
+    const targetLat = host?.lat ?? me?.lat;
+    const targetLng = host?.lng ?? me?.lng;
     if (!hasInitialFocus && targetLat != null && targetLng != null) {
       handleFocus([targetLat, targetLng]);
       setHasInitialFocus(true);
     }
-  }, [host?.lat, host?.lng, hasInitialFocus]);
+  }, [host?.lat, host?.lng, me?.lat, me?.lng, hasInitialFocus]);
 
   const handleFocus = (loc: LatLngExpression | null) => {
     if (loc) {
@@ -84,15 +84,6 @@ export default function SharePage({ params }: PageProps) {
     );
   }
 
-  if (!host?.lat || !host?.lng) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
-        <Spinner />
-        <p className="mt-4 text-gray-600 font-bold">ホストの位置情報を取得中...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full h-screen relative">
       {(myId || participants.length > 0) && (
@@ -103,6 +94,14 @@ export default function SharePage({ params }: PageProps) {
           focusKey={focusKey}
           onEditName={handleEditName}
         />
+      )}
+
+      {/* ホスト位置取得中の表示 */}
+      {(!host?.lat || !host?.lng) && (
+        <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
+          <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-[10px] font-bold text-gray-600">ホストを待機中...</span>
+        </div>
       )}
 
       {/* フォーカスボタン（スクロール可能リスト） */}
