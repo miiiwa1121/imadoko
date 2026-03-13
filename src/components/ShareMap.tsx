@@ -55,6 +55,7 @@ export default function ShareMap({
       center={centerPosition}
       zoom={15}
       minZoom={3}
+      zoomControl={false}
       worldCopyJump={true}
       scrollWheelZoom={true}
       style={{ height: "100vh", width: "100%" }}
