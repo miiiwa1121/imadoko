@@ -61,7 +61,7 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
       e.currentTarget.blur();
     }
   };
