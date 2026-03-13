@@ -1,35 +1,20 @@
 "use client";
 
-import { useState, useEffect, use, useMemo, useRef, useCallback } from "react";
+import { use, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { supabase } from "@/lib/supabaseClient";
-import { LatLngExpression } from "leaflet";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
 import { Power, RefreshCw } from "lucide-react";
+import { useGuestSession } from "@/hooks/useGuestSession";
 
 type PageProps = {
   params: Promise<{ shareId: string }>;
 };
 
-type SessionPayload = {
-  lat?: number;
-  lng?: number;
-  status: string;
-  [key: string]: unknown;
-};
-
 export default function SharePage({ params }: PageProps) {
   const { shareId } = use(params);
-  const [hostPosition, setHostPosition] = useState<LatLngExpression | null>(null);
-  const [guestPosition, setGuestPosition] = useState<LatLngExpression | null>(null);
-  const [displayStatus, setDisplayStatus] = useState<string>("loading");
-  
-  // 共有スイッチ（デフォルトON）
-  const [isSharing, setIsSharing] = useState(true);
-  
-  const stopTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const guestIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { hostPosition, guestPosition, displayStatus, isSharing, handleGuestStart, handleGuestStop } =
+    useGuestSession(shareId);
 
   const ShareMap = useMemo<React.ComponentType<ShareMapProps>>(
     () =>
@@ -39,109 +24,6 @@ export default function SharePage({ params }: PageProps) {
       }),
     []
   );
-
-  const handleStatusChange = useCallback((newStatus: string) => {
-    if (newStatus === "active") {
-      if (stopTimerRef.current) {
-        clearTimeout(stopTimerRef.current);
-        stopTimerRef.current = null;
-      }
-      setDisplayStatus("active");
-    } else if (newStatus === "stopped") {
-      if (!stopTimerRef.current && displayStatus !== "stopped") {
-        stopTimerRef.current = setTimeout(() => {
-          setDisplayStatus("stopped");
-        }, 3000);
-      }
-    }
-  }, [displayStatus]);
-
-  const updateGuestLocation = useCallback(async () => {
-    // 停止中は送信しない
-    if (!isSharing) return;
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setGuestPosition([latitude, longitude]);
-        await supabase
-          .from("sessions")
-          .update({ guest_lat: latitude, guest_lng: longitude })
-          .eq("id", shareId);
-      },
-      (err) => console.error(err),
-      { enableHighAccuracy: true }
-    );
-  }, [shareId, isSharing]);
-
-  // ゲストによる手動停止
-  const handleGuestStop = async () => {
-    setIsSharing(false);
-    setGuestPosition(null);
-    // DBから自分の位置を消す
-    await fetch("/api/guest-leave", {
-      method: "POST",
-      body: JSON.stringify({ shareId }),
-    });
-  };
-
-  const handleGuestStart = () => {
-    setIsSharing(true);
-    // updateGuestLocationはuseEffectで定期実行されるのでフラグを変えるだけでOK
-  };
-
-  useEffect(() => {
-    const fetchInitialSession = async () => {
-      const { data, error } = await supabase
-        .from("sessions")
-        .select("*")
-        .eq("id", shareId)
-        .single();
-
-      if (error || !data) {
-        setDisplayStatus("stopped");
-      } else {
-        setDisplayStatus(data.status);
-        if (data.lat && data.lng) setHostPosition([data.lat, data.lng]);
-        // 自分が再開したときのために、初期位置はセットしない（updateGuestLocationに任せる）
-      }
-    };
-
-    fetchInitialSession();
-    updateGuestLocation();
-    guestIntervalRef.current = setInterval(updateGuestLocation, 10000);
-
-    const channel = supabase
-      .channel(`session-channel-${shareId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${shareId}` },
-        (payload) => {
-          const newData = payload.new as SessionPayload;
-          handleStatusChange(newData.status);
-          if (newData.lat && newData.lng) {
-            setHostPosition([newData.lat, newData.lng]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (guestIntervalRef.current) clearInterval(guestIntervalRef.current);
-      if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
-      supabase.removeChannel(channel);
-    };
-  }, [shareId, handleStatusChange, updateGuestLocation]);
-
-  // ★修正: タブを閉じた時に確実に退出APIを呼ぶ
-  useEffect(() => {
-    const handleTabClose = () => {
-      const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
-      navigator.sendBeacon("/api/guest-leave", blob);
-    };
-    window.addEventListener("pagehide", handleTabClose);
-    return () => window.removeEventListener("pagehide", handleTabClose);
-  }, [shareId]);
 
   if (displayStatus === "loading") return <Spinner />;
 
