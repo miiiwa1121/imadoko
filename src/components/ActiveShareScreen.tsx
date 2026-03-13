@@ -19,9 +19,9 @@ const MAP_STYLES = [
 const getThumbnail = (url: string) => {
   return url
     .replace("{s}", "a")
-    .replace("{z}", "12")
-    .replace("{x}", "3638")
-    .replace("{y}", "1612")
+    .replace("{z}", "14")
+    .replace("{x}", "14552")
+    .replace("{y}", "6450")
     .replace("{r}", "");
 };
 

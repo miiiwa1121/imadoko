@@ -65,6 +65,8 @@ export default function ShareMap({
       <TileLayer
         attribution={tileAttribution}
         url={tileUrl}
+        detectRetina={true}
+        maxNativeZoom={18}
       />         
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;
