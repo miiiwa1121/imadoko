@@ -33,6 +33,11 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       let profile = storedStr ? JSON.parse(storedStr) : null;
 
       if (profile) {
+        if (!isHost && profile.name === "ホスト") {
+          profile.name = `P${profile.num || Math.floor(Math.random() * 100)}`;
+          sessionStorage.setItem(profileKey, JSON.stringify(profile));
+        }
+        
         // ★自己修復機能①：リロードで削除指令が走っていても、問答無用で「上書き(Upsert)」してデータを復活させる
         await supabase.from("session_participants").upsert({
           id: profile.id,

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps, Participant } from "@/components/ShareMap";
 import { Power, Copy, Check } from "lucide-react";
+import Spinner from "@/components/Spinner";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
@@ -69,6 +70,15 @@ export default function ActiveShareScreen({
       updateMyName(newName.trim());
     }
   };
+
+  if (!me?.lat || !me?.lng) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
+        <Spinner />
+        <p className="mt-4 text-gray-600 font-bold">現在地を取得中...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen relative">

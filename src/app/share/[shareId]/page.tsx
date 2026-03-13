@@ -85,6 +85,15 @@ export default function SharePage({ params }: PageProps) {
     );
   }
 
+  if (!host?.lat || !host?.lng) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
+        <Spinner />
+        <p className="mt-4 text-gray-600 font-bold">ホストの位置情報を取得中...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-screen relative">
       {(myId || participants.length > 0) && (
