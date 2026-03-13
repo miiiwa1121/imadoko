@@ -2,20 +2,23 @@
 
 import { use, useMemo } from "react";
 import dynamic from "next/dynamic";
+import { useGuestSession } from "@/hooks/useGuestSession";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
 import { Power, RefreshCw } from "lucide-react";
-import { useGuestSession } from "@/hooks/useGuestSession";
 
 type PageProps = {
   params: Promise<{ shareId: string }>;
 };
 
 export default function SharePage({ params }: PageProps) {
+  // paramsからIDを取り出す
   const { shareId } = use(params);
-  const { hostPosition, guestPosition, displayStatus, isSharing, handleGuestStart, handleGuestStop } =
-    useGuestSession(shareId);
+  
+  // カスタムフックからすべての状態と機能を受け取る
+  const { hostPosition, guestPosition, displayStatus, isSharing, handleGuestStart, handleGuestStop } = useGuestSession(shareId);
 
+  // 地図の動的インポート
   const ShareMap = useMemo<React.ComponentType<ShareMapProps>>(
     () =>
       dynamic(() => import("@/components/ShareMap"), {
@@ -25,6 +28,7 @@ export default function SharePage({ params }: PageProps) {
     []
   );
 
+  // 画面の表示切り替え
   if (displayStatus === "loading") return <Spinner />;
 
   if (displayStatus === "stopped") {

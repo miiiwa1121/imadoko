@@ -16,25 +16,23 @@ export function useGuestSession(shareId: string) {
   const [isSharing, setIsSharing] = useState(true);
 
   const stopTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const guestIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleStatusChange = useCallback(
-    (newStatus: string) => {
-      if (newStatus === "active") {
-        if (stopTimerRef.current) {
-          clearTimeout(stopTimerRef.current);
-          stopTimerRef.current = null;
-        }
-        setDisplayStatus("active");
-      } else if (newStatus === "stopped") {
-        if (!stopTimerRef.current && displayStatus !== "stopped") {
-          stopTimerRef.current = setTimeout(() => {
-            setDisplayStatus("stopped");
-          }, 3000);
-        }
+  const handleStatusChange = useCallback((newStatus: string) => {
+    if (newStatus === "active") {
+      if (stopTimerRef.current) {
+        clearTimeout(stopTimerRef.current);
+        stopTimerRef.current = null;
       }
-    },
-    [displayStatus]
-  );
+      setDisplayStatus("active");
+    } else if (newStatus === "stopped") {
+      if (!stopTimerRef.current && displayStatus !== "stopped") {
+        stopTimerRef.current = setTimeout(() => {
+          setDisplayStatus("stopped");
+        }, 3000);
+      }
+    }
+  }, [displayStatus]);
 
   const updateGuestLocation = useCallback(async () => {
     if (!isSharing) return;
@@ -53,22 +51,22 @@ export function useGuestSession(shareId: string) {
     );
   }, [shareId, isSharing]);
 
-  const handleGuestStop = useCallback(async () => {
+  const handleGuestStop = async () => {
     setIsSharing(false);
     setGuestPosition(null);
-
     await fetch("/api/guest-leave", {
       method: "POST",
       body: JSON.stringify({ shareId }),
     });
-  }, [shareId]);
+  };
 
-  const handleGuestStart = useCallback(() => {
+  const handleGuestStart = () => {
     setIsSharing(true);
-  }, []);
+  };
 
-  // 1. セッションの初期取得とSupabaseのリアルタイム購読
   useEffect(() => {
+    if (!shareId) return;
+
     const fetchInitialSession = async () => {
       const { data, error } = await supabase
         .from("sessions")
@@ -85,6 +83,8 @@ export function useGuestSession(shareId: string) {
     };
 
     fetchInitialSession();
+    updateGuestLocation();
+    guestIntervalRef.current = setInterval(updateGuestLocation, 10000);
 
     const channel = supabase
       .channel(`session-channel-${shareId}`)
@@ -102,38 +102,22 @@ export function useGuestSession(shareId: string) {
       .subscribe();
 
     return () => {
+      if (guestIntervalRef.current) clearInterval(guestIntervalRef.current);
       if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
       supabase.removeChannel(channel);
     };
-  }, [shareId, handleStatusChange]);
+  }, [shareId, handleStatusChange, updateGuestLocation]);
 
-  // 2. ゲスト共有中の定期位置情報更新
-  useEffect(() => {
-    if (!isSharing) return;
-
-    updateGuestLocation();
-    const intervalId = setInterval(updateGuestLocation, 10000);
-
-    return () => clearInterval(intervalId);
-  }, [isSharing, updateGuestLocation]);
-
-  // 3. ページ（タブ）離脱時の処理
   useEffect(() => {
     const handleTabClose = () => {
-      const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
-      navigator.sendBeacon("/api/guest-leave", blob);
+      if (shareId) {
+        const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
+        navigator.sendBeacon("/api/guest-leave", blob);
+      }
     };
-
     window.addEventListener("pagehide", handleTabClose);
     return () => window.removeEventListener("pagehide", handleTabClose);
   }, [shareId]);
 
-  return {
-    hostPosition,
-    guestPosition,
-    displayStatus,
-    isSharing,
-    handleGuestStart,
-    handleGuestStop,
-  };
+  return { hostPosition, guestPosition, displayStatus, isSharing, handleGuestStart, handleGuestStop };
 }
