@@ -190,15 +190,19 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       .channel(`participants-${sessionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, (payload) => {
         // ③ 通信の効率化：DBの再取得(fetchParticipants)を待たずに、届いたpayloadで直接状態を更新する
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+        if (payload.eventType === 'INSERT') {
+          const newParticipant = payload.new as Participant;
+          setParticipants(prev => {
+            const exists = prev.some(p => p.id === newParticipant.id);
+            if (!exists) {
+              return [...prev, newParticipant];
+            }
+            return prev;
+          });
+        } else if (payload.eventType === 'UPDATE') {
           const updatedParticipant = payload.new as Participant;
           setParticipants(prev => {
-            const exists = prev.some(p => p.id === updatedParticipant.id);
-            if (exists) {
-              return prev.map(p => p.id === updatedParticipant.id ? { ...p, ...updatedParticipant } : p);
-            } else {
-              return [...prev, updatedParticipant];
-            }
+            return prev.map(p => p.id === updatedParticipant.id ? { ...p, ...updatedParticipant } : p);
           });
         } else if (payload.eventType === 'DELETE') {
           setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
@@ -246,6 +250,12 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
 
   const updateMyName = async (newName: string) => {
     if (!myId || !sessionId) return;
+    
+    // ④ 楽観的更新(Optimistic UI) - DB更新を待たずにUIを即座に反映させる
+    setParticipants(prev => prev.map(p => 
+      p.id === myId ? { ...p, name: newName } : p
+    ));
+
     await supabase.from("session_participants").update({ name: newName }).eq("id", myId);
     
     // 名前の変更もブラウザに記憶させて、自己修復に備える
@@ -260,6 +270,8 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const stopSharing = async () => {
     setIsSharing(false);
     if (myId) {
+      // 楽観的更新
+      setParticipants(prev => prev.filter(p => p.id !== myId));
       await supabase.from("session_participants").delete().eq("id", myId);
       setMyId(null);
     }
