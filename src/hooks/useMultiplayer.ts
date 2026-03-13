@@ -195,7 +195,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
           setParticipants(prev => {
             const exists = prev.some(p => p.id === updatedParticipant.id);
             if (exists) {
-              return prev.map(p => p.id === updatedParticipant.id ? updatedParticipant : p);
+              return prev.map(p => p.id === updatedParticipant.id ? { ...p, ...updatedParticipant } : p);
             } else {
               return [...prev, updatedParticipant];
             }

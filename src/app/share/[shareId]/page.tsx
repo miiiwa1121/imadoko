@@ -84,6 +84,9 @@ export default function SharePage({ params }: PageProps) {
     );
   }
 
+  // 待機中はスピナーを出すのではなく、自分のピンを含む地図を描画する
+  // ({!host?.lat || !host?.lng} の早期リターンを削除)
+
   return (
     <div className="w-full h-screen relative">
       {(myId || participants.length > 0) && (
