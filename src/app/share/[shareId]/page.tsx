@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState, useEffect, useCallback } from "react";
+import { use, useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useMultiplayer } from "@/hooks/useMultiplayer";
 import type { ShareMapProps } from "@/components/ShareMap";
@@ -38,7 +38,6 @@ export default function SharePage({ params }: PageProps) {
     myId, 
     sessionStatus, 
     isSharing, 
-    setIsSharing, 
     updateMyName, 
     stopSharing,
     joinSession

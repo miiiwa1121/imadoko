@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(req: Request) {
   try {
-    const { participantId, sessionId } = await req.json();
+    const { participantId } = await req.json();
 
     if (!participantId) {
       return NextResponse.json({ error: 'Missing participantId' }, { status: 400 });
@@ -24,6 +24,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    console.error("Leave API Error:", err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
