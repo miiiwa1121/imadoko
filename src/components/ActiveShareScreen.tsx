@@ -82,39 +82,43 @@ export default function ActiveShareScreen({
       )}
 
       {/* フォーカスボタン（スクロール可能リスト） */}
-      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2 max-h-[70vh] overflow-y-auto pr-2 pb-2 scrollbar-hide">
+      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
         {/* 自分を最上部に固定 */}
-        {me && (
-          <button
-            onClick={() => me.lat !== null && me.lng !== null && handleFocus([me.lat, me.lng])}
-            disabled={!me.lat}
-            className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 min-w-[60px]"
-            title="自分の位置"
-          >
-            <div 
-              style={{ backgroundColor: me.color }} 
-              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-            ></div>
-            <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : "わたし"}</p>
-          </button>
-        )}
+        <div className="flex flex-col gap-2 shrink-0">
+          {me && (
+            <button
+              onClick={() => me.lat !== null && me.lng !== null && handleFocus([me.lat, me.lng])}
+              disabled={!me.lat}
+              className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
+              title="自分の位置"
+            >
+              <div 
+                style={{ backgroundColor: me.color }} 
+                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
+              ></div>
+              <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : "わたし"}</p>
+            </button>
+          )}
+        </div>
         
-        {/* 他の参加者（最大8人表示の目安でスクロール） */}
-        {others.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => p.lat !== null && p.lng !== null && handleFocus([p.lat, p.lng])}
-            disabled={!p.lat}
-            className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 min-w-[60px]"
-            title={`${p.name}の位置`}
-          >
-            <div 
-              style={{ backgroundColor: p.color }} 
-              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-            ></div>
-            <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
-          </button>
-        ))}
+        {/* 他の参加者（画面が許す限り表示、超えたらスクロール） */}
+        <div className="flex flex-col gap-2 overflow-y-auto scrollbar-hide pr-1 pb-2">
+          {others.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => p.lat !== null && p.lng !== null && handleFocus([p.lat, p.lng])}
+              disabled={!p.lat}
+              className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px] shrink-0"
+              title={`${p.name}の位置`}
+            >
+              <div 
+                style={{ backgroundColor: p.color }} 
+                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
+              ></div>
+              <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ホスト操作パネル */}
