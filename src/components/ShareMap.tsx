@@ -59,8 +59,8 @@ export default function ShareMap({
       <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
         attribution="&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>"
-        url="https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png"
-      />
+        url="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
+      />      
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;
         const isSelf = p.id === myId;
