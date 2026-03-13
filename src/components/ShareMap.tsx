@@ -55,7 +55,7 @@ export default function ShareMap({
       center={centerPosition}
       zoom={15}
       minZoom={3}
-      maxZoom={20}
+      maxZoom={22}
       zoomControl={false}
       worldCopyJump={true}
       scrollWheelZoom={true}
@@ -68,7 +68,7 @@ export default function ShareMap({
         url={tileUrl}
         detectRetina={true}
         maxNativeZoom={18}
-        maxZoom={20}
+        maxZoom={22}
       />         
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;
