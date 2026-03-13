@@ -68,6 +68,7 @@ export default function ShareMap({
       <TileLayer
         attribution={tileAttribution}
         url={tileUrl}
+        detectRetina={true}
         maxNativeZoom={maxNativeZoom}
         maxZoom={20}
       />         
