@@ -16,7 +16,6 @@ export function useGuestSession(shareId: string) {
   const [isSharing, setIsSharing] = useState(true);
 
   const stopTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const guestIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleStatusChange = useCallback(
     (newStatus: string) => {
@@ -68,6 +67,7 @@ export function useGuestSession(shareId: string) {
     setIsSharing(true);
   }, []);
 
+  // 1. セッションの初期取得とSupabaseのリアルタイム購読
   useEffect(() => {
     const fetchInitialSession = async () => {
       const { data, error } = await supabase
@@ -85,8 +85,6 @@ export function useGuestSession(shareId: string) {
     };
 
     fetchInitialSession();
-    updateGuestLocation();
-    guestIntervalRef.current = setInterval(updateGuestLocation, 10000);
 
     const channel = supabase
       .channel(`session-channel-${shareId}`)
@@ -104,12 +102,22 @@ export function useGuestSession(shareId: string) {
       .subscribe();
 
     return () => {
-      if (guestIntervalRef.current) clearInterval(guestIntervalRef.current);
       if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
       supabase.removeChannel(channel);
     };
-  }, [shareId, handleStatusChange, updateGuestLocation]);
+  }, [shareId, handleStatusChange]);
 
+  // 2. ゲスト共有中の定期位置情報更新
+  useEffect(() => {
+    if (!isSharing) return;
+
+    updateGuestLocation();
+    const intervalId = setInterval(updateGuestLocation, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [isSharing, updateGuestLocation]);
+
+  // 3. ページ（タブ）離脱時の処理
   useEffect(() => {
     const handleTabClose = () => {
       const blob = new Blob([JSON.stringify({ shareId })], { type: "application/json" });
