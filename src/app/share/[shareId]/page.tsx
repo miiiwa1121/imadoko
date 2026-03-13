@@ -162,7 +162,7 @@ export default function SharePage({ params }: PageProps) {
 
       {/* ホスト位置取得中の表示 */}
       {(!host?.lat || !host?.lng) && (
-        <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
+        <div className="absolute top-4 left-16 z-[1000] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
           <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-[10px] font-bold text-gray-600">ホストを待機中...</span>
         </div>
