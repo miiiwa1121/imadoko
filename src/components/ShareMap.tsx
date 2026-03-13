@@ -58,8 +58,8 @@ export default function ShareMap({
     >
       <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
-        attribution="&copy; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors"
-        url="https://tile.openstreetmap.jp/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
 
       {participants.map((p) => {
