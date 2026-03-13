@@ -7,23 +7,22 @@ type Props = {
 export default function StartShareScreen({ handleShareStart }: Props) {
   return (
     <div 
-      className="h-screen w-full bg-gray-100 flex items-center justify-center p-4 cursor-pointer"
+      className="h-screen w-full bg-gray-100 flex flex-col items-center justify-between py-20 px-4 cursor-pointer"
       onClick={handleShareStart}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-md max-w-sm w-full text-center hover:bg-gray-50 transition-colors">
-        <h1 className="text-2xl font-bold mb-2">Imadoko Share</h1>
-        <p className="text-gray-600 mb-6 text-sm">
-          現在地をリアルタイムで共有できます。<br />
-          画面をタップして共有を開始しましょう。
+      <div className="text-center mt-10">
+        <h1 className="text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">Imadoko Share</h1>
+        <p className="text-gray-700 text-base">
+          現在地をリアルタイムで共有できます。
         </p>
+      </div>
 
-        <div className="flex justify-center mb-6">
-          <div className="bg-blue-600 text-white p-4 rounded-full animate-bounce">
-            <Share2 className="w-8 h-8" />
-          </div>
+      <div className="flex flex-col items-center mb-10 animate-bounce">
+        <div className="bg-blue-600 text-white p-5 rounded-full shadow-lg mb-4">
+          <Share2 className="w-10 h-10" />
         </div>
-
-        <div className="mt-4 text-xs text-gray-400 flex items-center justify-center gap-1">
+        <p className="font-bold text-lg text-gray-800">画面をタップして開始</p>
+        <div className="mt-3 text-xs text-gray-500 flex items-center justify-center gap-1">
           <LinkIcon className="w-3 h-3" />
           共有リンクは開始後に発行されます
         </div>
