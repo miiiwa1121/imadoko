@@ -131,7 +131,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         }
       },
       (err) => console.error(err),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 5000 }
     );
   }, [isSharing, myId, isHost, sessionId]);
 

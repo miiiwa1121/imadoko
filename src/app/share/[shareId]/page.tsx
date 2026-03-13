@@ -27,28 +27,30 @@ export default function SharePage({ params }: PageProps) {
   } = useMultiplayer(shareId, false);
 
   const me = participants.find(p => p.id === myId);
-  const host = participants.find(p => p.name === "ホスト" && p.id !== myId);
-  const others = participants.filter(p => p.id !== myId && p.name !== "ホスト");
+  const host = participants.find(p => p.name === "ホスト");
+  const others = participants.filter(p => !me || p.id !== me.id);
 
+  // マップフォーカス制御
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
 
-  const handleFocus = useCallback((loc: LatLngExpression | null) => {
+  // ゲストの場合も、初期表示でホストにフォーカス
+  useEffect(() => {
+    const targetLat = host?.lat;
+    const targetLng = host?.lng;
+    if (!hasInitialFocus && targetLat != null && targetLng != null) {
+      handleFocus([targetLat, targetLng]);
+      setHasInitialFocus(true);
+    }
+  }, [host?.lat, host?.lng, hasInitialFocus]);
+
+  const handleFocus = (loc: LatLngExpression | null) => {
     if (loc) {
       setFocusLocation(loc);
       setFocusKey((prev) => prev + 1);
     }
-  }, []);
-
-  useEffect(() => {
-    const meLat = me?.lat;
-    const meLng = me?.lng;
-    if (!hasInitialFocus && meLat != null && meLng != null) {
-      handleFocus([meLat, meLng]);
-      setHasInitialFocus(true);
-    }
-  }, [me?.lat, me?.lng, hasInitialFocus, handleFocus]);
+  };
 
   const handleEditName = () => {
     const newName = window.prompt("新しい名前を入力してください:");

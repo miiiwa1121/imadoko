@@ -38,8 +38,11 @@ export default function ShareMap({
   focusKey,
   onEditName
 }: ShareMapProps) {
-  // 参加者から有効な位置の最初のものを初期中心に
-  const validParticipant = participants.find(p => p.lat !== null && p.lng !== null);
+  // ① ホストの座標を最優先で探す
+  const hostParticipant = participants.find(p => p.name === "ホスト" && p.lat !== null && p.lng !== null);
+  // ② ホストがなければ他の参加者の有効な座標を探す
+  const validParticipant = hostParticipant || participants.find(p => p.lat !== null && p.lng !== null);
+  
   const centerPosition: LatLngExpression = 
     validParticipant ? [validParticipant.lat!, validParticipant.lng!] : [35.681236, 139.767125];
 

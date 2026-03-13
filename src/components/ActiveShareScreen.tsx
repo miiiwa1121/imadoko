@@ -26,6 +26,7 @@ export default function ActiveShareScreen({
   // 自分自身と他の参加者を分ける
   // UUIDと名前の両方で安全に自分自身を特定
   const me = participants.find(p => p.id === myId);
+  const host = participants.find(p => p.name === "ホスト");
   
   // 自分以外の参加者のみを抽出（meが見つかった場合、そのIDを除外）
   const others = participants.filter(p => !me || p.id !== me.id);
@@ -50,13 +51,13 @@ export default function ActiveShareScreen({
   }, []);
 
   useEffect(() => {
-    const meLat = me?.lat;
-    const meLng = me?.lng;
-    if (!hasInitialFocus && meLat != null && meLng != null) {
-      handleFocus([meLat, meLng]);
+    const targetLat = host?.lat;
+    const targetLng = host?.lng;
+    if (!hasInitialFocus && targetLat != null && targetLng != null) {
+      handleFocus([targetLat, targetLng]);
       setHasInitialFocus(true);
     }
-  }, [me?.lat, me?.lng, hasInitialFocus, handleFocus]);
+  }, [host?.lat, host?.lng, hasInitialFocus, handleFocus]);
 
   const handleEditName = () => {
     const newName = window.prompt("新しい名前を入力してください:");
