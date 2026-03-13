@@ -59,7 +59,7 @@ export default function ShareMap({
       <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
         attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
       {participants.map((p) => {
