@@ -5,14 +5,20 @@ import { LatLngExpression } from "leaflet";
 import CustomMarker from "@/components/CustomMarker";
 import { useEffect } from "react";
 
+export type Participant = {
+  id: string;
+  name: string;
+  color: string;
+  lat: number | null;
+  lng: number | null;
+};
+
 export type ShareMapProps = {
-  hostPosition: LatLngExpression | null;
-  guestPosition: LatLngExpression | null;
-  // ピンのラベル文字を自由に設定できるようにする
-  hostLabel?: string;
-  guestLabel?: string;
+  participants: Participant[];
+  myId: string;
   focusLocation?: LatLngExpression | null;
   focusKey?: number;
+  onEditName?: () => void;
 };
 
 function MapUpdater({ focusLocation, focusKey }: { focusLocation?: LatLngExpression | null, focusKey?: number }) {
@@ -26,14 +32,16 @@ function MapUpdater({ focusLocation, focusKey }: { focusLocation?: LatLngExpress
 }
 
 export default function ShareMap({ 
-  hostPosition, 
-  guestPosition,
-  hostLabel = "ホスト",   // デフォルト値
-  guestLabel = "ゲスト",  // デフォルト値
+  participants,
+  myId,
   focusLocation,
-  focusKey
+  focusKey,
+  onEditName
 }: ShareMapProps) {
-  const centerPosition: LatLngExpression = hostPosition || guestPosition || [35.681236, 139.767125];
+  // 参加者から有効な位置の最初のものを初期中心に
+  const validParticipant = participants.find(p => p.lat !== null && p.lng !== null);
+  const centerPosition: LatLngExpression = 
+    validParticipant ? [validParticipant.lat!, validParticipant.lng!] : [35.681236, 139.767125];
 
   return (
     <MapContainer
@@ -51,23 +59,22 @@ export default function ShareMap({
         url="https://tile.openstreetmap.jp/{z}/{x}/{y}.png"
       />
 
-      {/* ホストのマーカー（赤） */}
-      {hostPosition && (
-        <CustomMarker 
-          position={hostPosition} 
-          type="host" 
-          popupText={hostLabel} // 受け取った文字を表示
-        />
-      )}
-
-      {/* ゲストのマーカー（青） */}
-      {guestPosition && (
-        <CustomMarker 
-          position={guestPosition} 
-          type="guest" 
-          popupText={guestLabel} // 受け取った文字を表示
-        />
-      )}
+      {participants.map((p) => {
+        if (p.lat === null || p.lng === null) return null;
+        const isSelf = p.id === myId;
+        const label = isSelf ? "わたし" : p.name;
+        
+        return (
+          <CustomMarker 
+            key={p.id}
+            position={[p.lat, p.lng]} 
+            color={p.color}
+            popupText={label}
+            isSelf={isSelf}
+            onEditName={onEditName}
+          />
+        );
+      })}
     </MapContainer>
   );
 }

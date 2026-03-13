@@ -3,23 +3,25 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
-import type { ShareMapProps } from "@/components/ShareMap";
+import type { ShareMapProps, Participant } from "@/components/ShareMap";
 import { Power, Copy, Check } from "lucide-react";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
 type Props = {
   shareId: string;
-  position: LatLngExpression | null;
-  guestPosition: LatLngExpression | null;
+  participants: Participant[];
+  myId: string | null;
   handleShareStop: () => void;
+  updateMyName: (name: string) => void;
 };
 
 export default function ActiveShareScreen({
   shareId,
-  position,
-  guestPosition,
+  participants,
+  myId,
   handleShareStop,
+  updateMyName
 }: Props) {
   const [isCopied, setIsCopied] = useState(false);
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
@@ -39,37 +41,63 @@ export default function ActiveShareScreen({
     }
   };
 
+  const handleEditName = () => {
+    const newName = window.prompt("新しい名前を入力してください:");
+    if (newName && newName.trim() !== "") {
+      updateMyName(newName.trim());
+    }
+  };
+
+  // 自分自身と他の参加者を分ける
+  const me = participants.find(p => p.id === myId);
+  const others = participants.filter(p => p.id !== myId);
+
   return (
     <div className="w-full h-screen relative">
-      <ShareMap
-        hostPosition={position}
-        guestPosition={guestPosition}
-        hostLabel="あなた"
-        guestLabel="相手"
-        focusLocation={focusLocation}
-        focusKey={focusKey}
-      />
+      {myId && (
+        <ShareMap
+          participants={participants}
+          myId={myId}
+          focusLocation={focusLocation}
+          focusKey={focusKey}
+          onEditName={handleEditName}
+        />
+      )}
 
-      {/* フォーカスボタン */}
-      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2">
-        <button
-          onClick={() => handleFocus(position)}
-          disabled={!position}
-          className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-3 rounded-full transition-colors disabled:opacity-50"
-          title="自分の位置"
-        >
-          <div className="w-4 h-4 rounded-full bg-red-500 mx-auto mb-1 border-2 border-white shadow-sm"></div>
-          <p className="text-[10px] font-bold">あなた</p>
-        </button>
-        <button
-          onClick={() => handleFocus(guestPosition)}
-          disabled={!guestPosition}
-          className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-3 rounded-full transition-colors disabled:opacity-50"
-          title="相手の位置"
-        >
-          <div className="w-4 h-4 rounded-full bg-blue-500 mx-auto mb-1 border-2 border-white shadow-sm"></div>
-          <p className="text-[10px] font-bold">相手</p>
-        </button>
+      {/* フォーカスボタン（スクロール可能リスト） */}
+      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2 max-h-[70vh] overflow-y-auto pr-2 pb-2 scrollbar-hide">
+        {/* 自分を最上部に固定 */}
+        {me && (
+          <button
+            onClick={() => me.lat !== null && me.lng !== null && handleFocus([me.lat, me.lng])}
+            disabled={!me.lat}
+            className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 min-w-[60px]"
+            title="自分の位置"
+          >
+            <div 
+              style={{ backgroundColor: me.color }} 
+              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
+            ></div>
+            <p className="text-[10px] font-bold text-center truncate px-1">わたし</p>
+          </button>
+        )}
+        
+        {/* 他の参加者（最大8人表示の目安でスクロール） */}
+        {others.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => p.lat !== null && p.lng !== null && handleFocus([p.lat, p.lng])}
+            disabled={!p.lat}
+            className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 min-w-[60px]"
+            title={`${p.name}の位置`}
+          >
+            <div 
+              style={{ backgroundColor: p.color }} 
+              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
+            ></div>
+            <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
+          </button>
+        ))}
       </div>
 
       {/* ホスト操作パネル */}
@@ -77,7 +105,7 @@ export default function ActiveShareScreen({
         <div className="bg-white/90 backdrop-blur px-6 py-3 rounded-full shadow-lg border border-blue-100 pointer-events-auto flex items-center gap-4">
           <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            あなたの位置を共有中
+            参加者: {participants.length}人
           </p>
           
           <div className="flex gap-2">
@@ -94,7 +122,7 @@ export default function ActiveShareScreen({
               onClick={handleShareStop}
               className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs font-bold transition-colors flex items-center gap-1"
             >
-              <Power size={14} /> 停止
+              <Power size={14} /> 全員終了
             </button>
           </div>
         </div>
