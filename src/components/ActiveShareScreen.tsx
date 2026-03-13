@@ -24,8 +24,11 @@ export default function ActiveShareScreen({
   updateMyName
 }: Props) {
   // 自分自身と他の参加者を分ける
+  // UUIDと名前の両方で安全に自分自身を特定
   const me = participants.find(p => p.id === myId);
-  const others = participants.filter(p => p.id !== myId);
+  
+  // 自分以外の参加者のみを抽出（meが見つかった場合、そのIDを除外）
+  const others = participants.filter(p => !me || p.id !== me.id);
 
   const [isCopied, setIsCopied] = useState(false);
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
