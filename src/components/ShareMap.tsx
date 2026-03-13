@@ -19,6 +19,8 @@ export type ShareMapProps = {
   focusLocation?: LatLngExpression | null;
   focusKey?: number;
   onEditName?: (newName: string) => void;
+  tileUrl?: string;
+  tileAttribution?: string;
 };
 
 function MapUpdater({ focusLocation, focusKey }: { focusLocation?: LatLngExpression | null, focusKey?: number }) {
@@ -36,7 +38,9 @@ export default function ShareMap({
   myId,
   focusLocation,
   focusKey,
-  onEditName
+  onEditName,
+  tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  tileAttribution = '&copy; <a href="https://carto.com/attributions">CARTO</a>'
 }: ShareMapProps) {
   // ① ホストの座標を最優先で探す
   const hostParticipant = participants.find(p => p.name === "ホスト" && p.lat !== null && p.lng !== null);
@@ -58,8 +62,8 @@ export default function ShareMap({
     >
       <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
-        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        attribution={tileAttribution}
+        url={tileUrl}
       />         
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;

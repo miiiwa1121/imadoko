@@ -9,6 +9,18 @@ import Spinner from "@/components/Spinner";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
+const MAP_STYLES = [
+  { name: "標準地図 (OSM)", url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>' },
+  { name: "白地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png", attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>' },
+  { name: "写真 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>' },
+  { name: "ダークモード (CARTO)", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' },
+  { name: "ライトモード (CARTO)", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' },
+  { name: "地形図 (Esri)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community' },
+  { name: "衛星画像 (Esri)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community' },
+  { name: "水彩画風 (Stamen)", url: "https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg", attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' },
+];
+
 type Props = {
   shareId: string;
   participants: Participant[];
@@ -36,6 +48,7 @@ export default function ActiveShareScreen({
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
+  const [mapStyleIndex, setMapStyleIndex] = useState(0);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/share/${shareId}`;
@@ -81,6 +94,18 @@ export default function ActiveShareScreen({
 
   return (
     <div className="w-full h-screen relative">
+      <div className="absolute top-4 right-4 z-[1000]">
+        <select
+          value={mapStyleIndex}
+          onChange={(e) => setMapStyleIndex(Number(e.target.value))}
+          className="bg-white/90 backdrop-blur shadow-md text-gray-700 text-sm py-1 px-2 rounded-md border border-gray-200 outline-none"
+        >
+          {MAP_STYLES.map((style, i) => (
+            <option key={i} value={i}>{style.name}</option>
+          ))}
+        </select>
+      </div>
+
       {myId && (
         <ShareMap
           participants={participants}
@@ -88,11 +113,13 @@ export default function ActiveShareScreen({
           focusLocation={focusLocation}
           focusKey={focusKey}
           onEditName={handleEditName}
+          tileUrl={MAP_STYLES[mapStyleIndex].url}
+          tileAttribution={MAP_STYLES[mapStyleIndex].attribution}
         />
       )}
 
       {/* フォーカスボタン（スクロール可能リスト） */}
-      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
+      <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
         {/* 自分を最上部に固定 */}
         <div className="flex flex-col gap-2 shrink-0">
           {me && (

@@ -12,6 +12,18 @@ type PageProps = {
   params: Promise<{ shareId: string }>;
 };
 
+const MAP_STYLES = [
+  { name: "① 国土地理院 淡色地図", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
+  { name: "② 国土地理院 標準地図", url: "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
+  { name: "③ 国土地理院 航空写真", url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", attribution: "&copy; <a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>国土地理院</a>" },
+  { name: "④ OpenStreetMap Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; <a href='https://www.openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> contributors" },
+  { name: "⑤ CARTO Voyager (現代風)", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
+  { name: "⑥ CARTO Positron (白基調)", url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
+  { name: "⑦ CARTO Dark Matter (黒基調)", url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
+  { name: "⑧ Esri World Imagery (衛星)", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "Tiles &copy; Esri" },
+  { name: "⑨ OpenTopoMap (地形)", url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", attribution: "Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenTopoMap" }
+];
+
 export default function SharePage({ params }: PageProps) {
   const { shareId } = use(params);
   
@@ -34,6 +46,7 @@ export default function SharePage({ params }: PageProps) {
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
+  const [mapStyleIndex, setMapStyleIndex] = useState(0);
 
   // ゲストの場合も、初期表示でホスト（または自分）にフォーカス
   useEffect(() => {
@@ -89,6 +102,21 @@ export default function SharePage({ params }: PageProps) {
 
   return (
     <div className="w-full h-screen relative">
+      {/* 地図切り替えセレクトボックス */}
+      <div className="absolute top-4 right-4 z-[1000]">
+        <select
+          className="bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-md text-xs font-bold text-gray-700 border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={mapStyleIndex}
+          onChange={(e) => setMapStyleIndex(Number(e.target.value))}
+        >
+          {MAP_STYLES.map((style, i) => (
+            <option key={i} value={i}>
+              {style.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {(myId || participants.length > 0) && (
         <ShareMap 
           participants={participants}
@@ -96,6 +124,8 @@ export default function SharePage({ params }: PageProps) {
           focusLocation={focusLocation}
           focusKey={focusKey}
           onEditName={handleEditName}
+          tileUrl={MAP_STYLES[mapStyleIndex].url}
+          tileAttribution={MAP_STYLES[mapStyleIndex].attribution}
         />
       )}
 
@@ -108,7 +138,7 @@ export default function SharePage({ params }: PageProps) {
       )}
 
       {/* フォーカスボタン（スクロール可能リスト） */}
-      <div className="absolute top-8 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
+      <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
         {/* ホスト＆自分を最上部に固定 */}
         <div className="flex flex-col gap-2 shrink-0">
           {/* ホスト */}
