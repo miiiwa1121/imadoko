@@ -7,17 +7,17 @@ type Props = {
 export default function StartShareScreen({ handleShareStart }: Props) {
   return (
     <div 
-      className="h-screen w-full bg-gray-100 flex flex-col items-center justify-between py-20 px-4 cursor-pointer"
+      className="h-screen w-full bg-gray-100 cursor-pointer relative"
       onClick={handleShareStart}
     >
-      <div className="text-center mt-10">
+      <div className="text-center pt-24 px-4">
         <h1 className="text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">Imadoko Share</h1>
         <p className="text-gray-700 text-base">
           現在地をリアルタイムで共有できます。
         </p>
       </div>
 
-      <div className="flex flex-col items-center mb-10">
+      <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex flex-col items-center px-4">
         <div className="bg-blue-600 text-white p-5 rounded-full shadow-lg mb-4">
           <Share2 className="w-10 h-10" />
         </div>
