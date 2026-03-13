@@ -10,15 +10,16 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function Map() {
   const [shareId, setShareId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // ★変更：最初はローディングにしない（即座にスタート画面を出すため）
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Initialize from sessionStorage on mount
   useEffect(() => {
+    setIsMounted(true);
     const stored = sessionStorage.getItem("hostSessionId");
     if (stored) {
       setShareId(stored);
     }
-    setIsLoading(false);
   }, []);
 
   const {
@@ -33,7 +34,6 @@ export default function Map() {
     setIsLoading(true);
     const newShareId = nanoid(10);
     
-    // ホストとして新しいセッションを作成
     const { error } = await supabase.from("sessions").insert({
       id: newShareId,
       status: 'active',
@@ -42,7 +42,6 @@ export default function Map() {
     });
 
     if (!error) {
-      // 以前の参加情報をクリアして、新しいセッションで真っ新な状態を作れるようにする
       sessionStorage.removeItem(`participantId-${newShareId}`);
       sessionStorage.setItem("hostSessionId", newShareId);
       setShareId(newShareId);
@@ -61,7 +60,8 @@ export default function Map() {
 
   if (isLoading) return <Spinner />;
 
-  if (!shareId) {
+  // ★変更：サーバー側での描画時、またはshareIdが無い場合は即座にスタート画面を出す
+  if (!isMounted || !shareId) {
     return <StartShareScreen handleShareStart={handleShareStart} />;
   }
 
