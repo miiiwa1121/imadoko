@@ -3,9 +3,9 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
+import type { ShareMapProps } from "@/components/ShareMap";
 
-// dynamic インポートに <any> を指定して型の不一致エラーを回避します
-const ShareMap = dynamic<any>(() => import("@/components/ShareMap"), { ssr: false });
+const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
 type Props = {
   shareId: string;
