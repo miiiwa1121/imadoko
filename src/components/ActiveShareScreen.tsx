@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps, Participant } from "@/components/ShareMap";
-import { Power, Copy, Check } from "lucide-react";
+import { Power, Copy, Check, Layers } from "lucide-react";
 import Spinner from "@/components/Spinner";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
@@ -15,6 +15,15 @@ const MAP_STYLES = [
   { name: "CARTO Voyager", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", attribution: "&copy; <a href='https://carto.com/attributions'>CARTO</a>" },
   { name: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community" }
 ];
+
+const getThumbnail = (url: string) => {
+  return url
+    .replace("{s}", "a")
+    .replace("{z}", "12")
+    .replace("{x}", "3638")
+    .replace("{y}", "1612")
+    .replace("{r}", "");
+};
 
 type Props = {
   shareId: string;
@@ -44,6 +53,7 @@ export default function ActiveShareScreen({
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
   const [mapStyleIndex, setMapStyleIndex] = useState(0);
+  const [isMapStyleOpen, setIsMapStyleOpen] = useState(false);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/share/${shareId}`;
@@ -89,16 +99,45 @@ export default function ActiveShareScreen({
 
   return (
     <div className="w-full h-screen relative">
+      {/* 地図デザイン切り替えUI */}
       <div className="absolute top-4 left-4 z-[1000]">
-        <select
-          value={mapStyleIndex}
-          onChange={(e) => setMapStyleIndex(Number(e.target.value))}
-          className="bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-md text-xs font-bold text-gray-700 border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <button
+          onClick={() => setIsMapStyleOpen(!isMapStyleOpen)}
+          className="bg-white/90 backdrop-blur p-2 rounded-lg shadow-md border border-gray-100 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
+          title="地図のデザインを変更"
         >
-          {MAP_STYLES.map((style, i) => (
-            <option key={i} value={i}>{style.name}</option>
-          ))}
-        </select>
+          <Layers size={20} />
+        </button>
+
+        {isMapStyleOpen && (
+          <div className="absolute top-12 left-0 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-gray-100 w-64">
+            <p className="text-xs font-bold text-gray-500 mb-2 px-1">地図デザイン</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MAP_STYLES.map((style, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setMapStyleIndex(i);
+                    setIsMapStyleOpen(false);
+                  }}
+                  className={`flex flex-col items-center p-1.5 rounded-lg border-2 transition-all ${
+                    mapStyleIndex === i 
+                      ? "border-blue-500 bg-blue-50/50" 
+                      : "border-transparent hover:bg-gray-100"
+                  }`}
+                >
+                  <div 
+                    className="w-full h-16 bg-gray-200 rounded-md mb-1.5 bg-cover bg-center shadow-sm border border-gray-200"
+                    style={{ backgroundImage: `url(${getThumbnail(style.url)})` }}
+                  />
+                  <span className="text-[10px] font-bold text-gray-700 w-full text-center truncate">
+                    {style.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {myId && (
