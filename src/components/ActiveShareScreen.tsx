@@ -3,7 +3,6 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
-import { Button } from "@/components/ui/button";
 
 const ShareMap = dynamic(() => import("@/components/ShareMap"), { ssr: false });
 
@@ -34,10 +33,18 @@ export default function ActiveShareScreen({
       <div className="p-4 bg-white shadow-md z-[1000]">
         <p className="font-semibold mb-2">共有リンクが作成されました！</p>
         <div className="flex gap-2">
-          <Button onClick={handleCopyLink}>{isCopied ? "コピー済み！" : "リンクをコピー"}</Button>
-          <Button variant="destructive" onClick={handleShareStop}>
+          <button
+            onClick={handleCopyLink}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          >
+            {isCopied ? "コピー済み！" : "リンクをコピー"}
+          </button>
+          <button
+            onClick={handleShareStop}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+          >
             共有を停止
-          </Button>
+          </button>
         </div>
       </div>
 
