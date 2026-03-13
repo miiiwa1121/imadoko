@@ -45,10 +45,16 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       
       const { data: existing } = await supabase
         .from("session_participants")
-        .select("participant_num")
+        .select("participant_num, name")
         .eq("session_id", currentSessionId)
-        .order("participant_num", { ascending: false })
-        .limit(1);
+        .order("participant_num", { ascending: false });
+
+      // ホストが既に存在するかチェック
+      const existingHost = existing?.find(p => p.name === "ホスト");
+      if (isHost && existingHost) {
+        console.warn("Host already exists in this session.");
+        return;
+      }
 
       const nextNum = existing && existing.length > 0 ? existing[0].participant_num + 1 : 1;
       const initialName = isHost ? "ホスト" : `P${nextNum}`;

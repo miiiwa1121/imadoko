@@ -42,6 +42,8 @@ export default function Map() {
     });
 
     if (!error) {
+      // 以前の参加情報をクリアして、新しいセッションで真っ新な状態を作れるようにする
+      sessionStorage.removeItem(`participantId-${newShareId}`);
       sessionStorage.setItem("hostSessionId", newShareId);
       setShareId(newShareId);
       await joinSession(newShareId);
