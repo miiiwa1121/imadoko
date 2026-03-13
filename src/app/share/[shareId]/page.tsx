@@ -30,6 +30,7 @@ const MAP_STYLES = [
   { name: "CARTO Voyager", url: "https://{s}[.basemaps.cartocdn.com/rastertiles/voyager/](https://.basemaps.cartocdn.com/rastertiles/voyager/){z}/{x}/{y}{r}.png", attribution: "&copy; <a href='[https://carto.com/attributions](https://carto.com/attributions)'>CARTO</a>" },
   { name: "Esri World Imagery", url: "[https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/){z}/{y}/{x}", attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community" }
 ];
+
 export default function SharePage({ params }: PageProps) {
   const { shareId } = use(params);
   
