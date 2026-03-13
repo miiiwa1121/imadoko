@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps, Participant } from "@/components/ShareMap";
@@ -23,9 +23,14 @@ export default function ActiveShareScreen({
   handleShareStop,
   updateMyName
 }: Props) {
+  // 自分自身と他の参加者を分ける
+  const me = participants.find(p => p.id === myId);
+  const others = participants.filter(p => p.id !== myId);
+
   const [isCopied, setIsCopied] = useState(false);
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
   const [focusKey, setFocusKey] = useState(0);
+  const [hasInitialFocus, setHasInitialFocus] = useState(false);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/share/${shareId}`;
@@ -34,23 +39,32 @@ export default function ActiveShareScreen({
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleFocus = (loc: LatLngExpression | null) => {
+  const handleFocus = useCallback((loc: LatLngExpression | null) => {
     if (loc) {
       setFocusLocation(loc);
       setFocusKey((prev) => prev + 1);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const meLat = me?.lat;
+    const meLng = me?.lng;
+    if (!hasInitialFocus && meLat != null && meLng != null) {
+      handleFocus([meLat, meLng]);
+      setHasInitialFocus(true);
+    }
+  }, [me?.lat, me?.lng, hasInitialFocus, handleFocus]);
 
   const handleEditName = () => {
     const newName = window.prompt("新しい名前を入力してください:");
     if (newName && newName.trim() !== "") {
+      if (newName.trim() === "ホスト") {
+        alert("その名前は使用できません");
+        return;
+      }
       updateMyName(newName.trim());
     }
   };
-
-  // 自分自身と他の参加者を分ける
-  const me = participants.find(p => p.id === myId);
-  const others = participants.filter(p => p.id !== myId);
 
   return (
     <div className="w-full h-screen relative">
@@ -78,7 +92,7 @@ export default function ActiveShareScreen({
               style={{ backgroundColor: me.color }} 
               className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
             ></div>
-            <p className="text-[10px] font-bold text-center truncate px-1">わたし</p>
+            <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : "わたし"}</p>
           </button>
         )}
         

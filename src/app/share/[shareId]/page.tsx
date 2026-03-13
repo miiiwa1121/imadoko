@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useMemo, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useMultiplayer } from "@/hooks/useMultiplayer";
 import type { ShareMapProps } from "@/components/ShareMap";
@@ -26,19 +26,36 @@ export default function SharePage({ params }: PageProps) {
     joinSession
   } = useMultiplayer(shareId, false);
 
+  const me = participants.find(p => p.id === myId);
+  const others = participants.filter(p => p.id !== myId);
+
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
   const [focusKey, setFocusKey] = useState(0);
+  const [hasInitialFocus, setHasInitialFocus] = useState(false);
 
-  const handleFocus = (loc: LatLngExpression | null) => {
+  const handleFocus = useCallback((loc: LatLngExpression | null) => {
     if (loc) {
       setFocusLocation(loc);
       setFocusKey((prev) => prev + 1);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const meLat = me?.lat;
+    const meLng = me?.lng;
+    if (!hasInitialFocus && meLat != null && meLng != null) {
+      handleFocus([meLat, meLng]);
+      setHasInitialFocus(true);
+    }
+  }, [me?.lat, me?.lng, hasInitialFocus, handleFocus]);
 
   const handleEditName = () => {
     const newName = window.prompt("新しい名前を入力してください:");
     if (newName && newName.trim() !== "") {
+      if (newName.trim() === "ホスト") {
+        alert("その名前は使用できません");
+        return;
+      }
       updateMyName(newName.trim());
     }
   };
@@ -64,9 +81,6 @@ export default function SharePage({ params }: PageProps) {
       </div>
     );
   }
-
-  const me = participants.find(p => p.id === myId);
-  const others = participants.filter(p => p.id !== myId);
 
   return (
     <div className="w-full h-screen relative">
@@ -94,7 +108,7 @@ export default function SharePage({ params }: PageProps) {
               style={{ backgroundColor: me.color }} 
               className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
             ></div>
-            <p className="text-[10px] font-bold text-center truncate px-1">わたし</p>
+            <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : "わたし"}</p>
           </button>
         )}
         

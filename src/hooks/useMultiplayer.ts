@@ -51,8 +51,8 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         .limit(1);
 
       const nextNum = existing && existing.length > 0 ? existing[0].participant_num + 1 : 1;
-      const initialName = `P${nextNum}`;
-      const color = PALETTE[nextNum % PALETTE.length];
+      const initialName = isHost ? "ホスト" : `P${nextNum}`;
+      const color = PALETTE[(nextNum - 1) % PALETTE.length];
 
       await supabase.from("session_participants").insert({
         id: storedId,

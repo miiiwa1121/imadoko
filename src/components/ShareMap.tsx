@@ -62,7 +62,8 @@ export default function ShareMap({
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;
         const isSelf = p.id === myId;
-        const label = isSelf ? "わたし" : p.name;
+        const isHost = p.name === "ホスト";
+        const label = isHost ? "ホスト" : (isSelf ? "わたし" : p.name);
         
         return (
           <CustomMarker 
@@ -71,7 +72,7 @@ export default function ShareMap({
             color={p.color}
             popupText={label}
             isSelf={isSelf}
-            onEditName={onEditName}
+            onEditName={(isSelf && !isHost) ? onEditName : undefined}
           />
         );
       })}
