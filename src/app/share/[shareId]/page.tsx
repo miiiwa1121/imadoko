@@ -13,35 +13,10 @@ type PageProps = {
 };
 
 const MAP_STYLES = [
-  { 
-    name: "淡色地図 (GSI)", 
-    url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", 
-    attribution: "&copy; 国土地理院", 
-    maxNativeZoom: 18,
-    detectRetina: false // 国土地理院は標準タイルのみのため
-  },
-  { 
-    name: "OSM Japan", 
-    url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", 
-    attribution: "&copy; OpenStreetMap", 
-    maxNativeZoom: 18,
-    detectRetina: false 
-  },
-  { 
-    name: "CARTO Voyager", 
-    // {r} を使うことで、Retinaディスプレイ時のみ自動で @2x 版を取得させます
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", 
-    attribution: "&copy; CARTO", 
-    maxNativeZoom: 20,
-    detectRetina: true // CARTOは高画質タイルに対応しているため
-  },
-  { 
-    name: "Esri World Imagery", 
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 
-    attribution: "&copy; Esri", 
-    maxNativeZoom: 18,
-    detectRetina: false 
-  }
+  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; 国土地理院", maxNativeZoom: 18, detectRetina: false },
+  { name: "OSM Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap", maxNativeZoom: 18, detectRetina: false },
+  { name: "CARTO Voyager", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", attribution: "&copy; CARTO", maxNativeZoom: 20, detectRetina: true },
+  { name: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "&copy; Esri", maxNativeZoom: 18, detectRetina: false }
 ];
 
 const getThumbnail = (url: string) => {
@@ -74,7 +49,7 @@ export default function SharePage({ params }: PageProps) {
   const [focusLocation, setFocusLocation] = useState<LatLngExpression | null>(null);
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
-  const [mapStyleIndex, setMapStyleIndex] = useState(0);
+  const [mapStyleIndex, setMapStyleIndex] = useState(2);
   const [isMapStyleOpen, setIsMapStyleOpen] = useState(false);
 
   // ゲストの場合も、初期表示でホスト（または自分）にフォーカス

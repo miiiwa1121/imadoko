@@ -41,9 +41,9 @@ export default function ShareMap({
   focusLocation,
   focusKey,
   onEditName,
-  tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+  tileUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
   tileAttribution = '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-  maxNativeZoom = 18,
+  maxNativeZoom = 20,
   detectRetina = false
 }: ShareMapProps) {
   // ① ホストの座標を最優先で探す
