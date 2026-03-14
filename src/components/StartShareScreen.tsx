@@ -73,7 +73,7 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
               ご意見・ご要望は今後の改善に活かします。
               <span className="block mt-2">
                 <a
-                  href="https://chat.google.com/room/AAAA9_07aoM/D0WzY6JCx_0/D0WzY6JCx_0?cls=10"
+                  href="https://x.com/miiiwa3330?s=21&t=get0Z-iRvISjUpl8YNZ4FA"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-bold text-blue-600 hover:text-blue-700 underline underline-offset-4"
