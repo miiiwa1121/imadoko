@@ -71,6 +71,16 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
             <p className="text-sm text-gray-600 leading-relaxed">
               個人開発として運営しているプロジェクトです。ユーザーの体験を最優先に、軽量で安心して使えるサービスを目指しています。
               ご意見・ご要望は今後の改善に活かします。
+              <span className="block mt-2">
+                <a
+                  href="https://chat.google.com/room/AAAA9_07aoM/D0WzY6JCx_0/D0WzY6JCx_0?cls=10"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-blue-600 hover:text-blue-700 underline underline-offset-4"
+                >
+                  Xで連絡する
+                </a>
+              </span>
             </p>
           </div>
           <div className="rounded-2xl border border-blue-100 bg-blue-50/80 p-4">
