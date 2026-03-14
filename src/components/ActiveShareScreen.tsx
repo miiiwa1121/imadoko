@@ -91,7 +91,8 @@ export default function ActiveShareScreen({
 
   if (!me?.lat || !me?.lng) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50 relative">
+        <WarningBanner shareId={shareId} />
         <Spinner />
         <p className="mt-4 text-gray-600 font-bold">現在地を取得中...</p>
       </div>
@@ -100,7 +101,7 @@ export default function ActiveShareScreen({
 
   return (
     <div className="w-full h-screen relative">
-      <WarningBanner />
+      <WarningBanner shareId={shareId} />
       {/* 地図デザイン切り替えUI */}
       <div className="absolute top-12 left-4 z-[1000]">
         <button

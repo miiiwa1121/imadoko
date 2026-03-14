@@ -3,20 +3,20 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export function WarningBanner() {
+export function WarningBanner({ shareId }: { shareId: string }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    const isDismissed = sessionStorage.getItem("warningBannerDismissed");
+    const isDismissed = sessionStorage.getItem(`warningBannerDismissed_${shareId}`);
     if (!isDismissed) {
       setIsVisible(true);
     }
-  }, []);
+  }, [shareId]);
 
   const handleClose = () => {
     setIsFadingOut(true);
-    sessionStorage.setItem("warningBannerDismissed", "true");
+    sessionStorage.setItem(`warningBannerDismissed_${shareId}`, "true");
     setTimeout(() => setIsVisible(false), 300);
   };
 
