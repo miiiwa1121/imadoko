@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps, Participant } from "@/components/ShareMap";
-import { Power, Copy, Check, Layers, X } from "lucide-react";
+import { Power, Copy, Check, Layers } from "lucide-react";
 import Spinner from "@/components/Spinner";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
@@ -40,8 +40,6 @@ export default function ActiveShareScreen({
   handleShareStop,
   updateMyName
 }: Props) {
-  const [showWarning, setShowWarning] = useState(true);
-
   // 自分自身と他の参加者を分ける
   // UUIDと名前の両方で安全に自分自身を特定
   const me = participants.find(p => p.id === myId);
@@ -102,16 +100,9 @@ export default function ActiveShareScreen({
   return (
     <div className="w-full h-screen relative">
       {/* 画面を開いたままにしてください警告 */}
-      {showWarning && (
-        <div className="absolute top-0 left-0 right-0 z-[2000] bg-yellow-100/90 backdrop-blur-sm text-yellow-800 text-[11px] sm:text-xs font-bold py-2 px-4 shadow-sm flex items-center justify-between">
-          <div className="flex-1 text-center">
-            ⚠️ リアルタイムで共有するには、画面を開いたままにしてください
-          </div>
-          <button onClick={() => setShowWarning(false)} className="p-1 hover:bg-yellow-200 rounded-full transition-colors flex-shrink-0">
-            <X size={16} />
-          </button>
-        </div>
-      )}
+      <div className="absolute top-0 left-0 right-0 z-[2000] bg-yellow-100/90 backdrop-blur-sm text-yellow-800 text-[11px] sm:text-xs font-bold py-2 px-4 text-center shadow-sm">
+        ⚠️ リアルタイムで共有するには、画面を開いたままにしてください
+      </div>
 
       {/* 地図デザイン切り替えUI */}
       <div className="absolute top-12 left-4 z-[1000]">

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useMultiplayer } from "@/hooks/useMultiplayer";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
-import { Power, RefreshCw, Layers, X } from "lucide-react";
+import { Power, RefreshCw, Layers } from "lucide-react";
 import { LatLngExpression } from "leaflet";
 
 type PageProps = {
@@ -29,7 +29,6 @@ const getThumbnail = (url: string) => {
 };
 
 export default function SharePage({ params }: PageProps) {
-  const [showWarning, setShowWarning] = useState(true);
   const { shareId } = use(params);
   
   const { 
@@ -108,14 +107,9 @@ export default function SharePage({ params }: PageProps) {
   return (
     <div className="w-full h-screen relative">
       {/* 画面を開いたままにしてください警告（共有中のみ） */}
-      {isSharing && showWarning && (
-        <div className="absolute top-0 left-0 right-0 z-[2000] bg-yellow-100/90 backdrop-blur-sm text-yellow-800 text-[11px] sm:text-xs font-bold py-2 px-4 shadow-sm flex items-center justify-between">
-          <div className="flex-1 text-center">
-            ⚠️ リアルタイムで共有するには、画面を開いたままにしてください
-          </div>
-          <button onClick={() => setShowWarning(false)} className="p-1 hover:bg-yellow-200 rounded-full transition-colors flex-shrink-0">
-            <X size={16} />
-          </button>
+      {isSharing && (
+        <div className="absolute top-0 left-0 right-0 z-[2000] bg-yellow-100/90 backdrop-blur-sm text-yellow-800 text-[11px] sm:text-xs font-bold py-2 px-4 text-center shadow-sm">
+          ⚠️ リアルタイムで共有するには、画面を開いたままにしてください
         </div>
       )}
 
