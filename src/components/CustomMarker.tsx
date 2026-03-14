@@ -10,11 +10,12 @@ export type CustomMarkerProps = {
   position: LatLngExpression;
   color: string;
   popupText: string;
+  badgeText: string;
   isSelf: boolean;
   onEditName?: (newName: string) => void;
 };
 
-export default function CustomMarker({ position, color, popupText, isSelf, onEditName }: CustomMarkerProps) {
+export default function CustomMarker({ position, color, popupText, badgeText, isSelf, onEditName }: CustomMarkerProps) {
   const [inputValue, setInputValue] = useState(popupText);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -35,6 +36,9 @@ export default function CustomMarker({ position, color, popupText, isSelf, onEdi
     html: `
       <div style="background-color: ${color};" class="relative flex items-center justify-center w-10 h-10 rounded-full border-2 border-white shadow-lg">
         ${iconMarkup}
+        <div class="absolute -right-1 -bottom-1 w-5 h-5 rounded-full bg-white text-[10px] font-bold text-gray-800 flex items-center justify-center border border-gray-200 shadow-sm">
+          ${badgeText}
+        </div>
         <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white"></div>
         <div style="border-top-color: ${color};" class="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px]"></div>
       </div>

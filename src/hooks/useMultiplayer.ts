@@ -10,6 +10,8 @@ export type Participant = {
   lng: number | null;
 };
 
+export type LocationErrorType = "permission-denied" | "unavailable" | "timeout" | "unknown" | null;
+
 const PALETTE = [
   "#EF4444", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6",
   "#EC4899", "#06B6D4", "#14B8A6", "#F43F5E", "#84CC16"
@@ -20,6 +22,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const [myId, setMyId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<string>("loading");
   const [isSharing, setIsSharing] = useState(false);
+  const [locationError, setLocationError] = useState<LocationErrorType>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isJoiningRef = useRef(false);
   const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
@@ -129,6 +132,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        setLocationError(null);
         const { latitude, longitude } = pos.coords;
         
         // リロード時に備えて最新の座標を即座に保存
@@ -180,7 +184,15 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
            await supabase.from("sessions").update({ lat: latitude, lng: longitude, status: 'active' }).eq("id", sessionId);
         }
       },
-      (err) => console.error(err),
+      (err) => {
+        console.error(err);
+        const errorType: LocationErrorType =
+          err.code === 1 ? "permission-denied" :
+          err.code === 2 ? "unavailable" :
+          err.code === 3 ? "timeout" :
+          "unknown";
+        setLocationError(errorType);
+      },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 2500 }
     );
   }, [isSharing, myId, isHost, sessionId]);
@@ -308,6 +320,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     sessionStatus, 
     isSharing, 
     setIsSharing,
+    locationError,
     updateMyName,
     stopSharing,
     endSessionForEveryone,

@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import CustomMarker from "@/components/CustomMarker";
 import { useEffect } from "react";
+import { getParticipantBadge } from "@/lib/participantBadge";
 
 export type Participant = {
   id: string;
@@ -71,7 +72,7 @@ export default function ShareMap({
         key={tileUrl}
         attribution={tileAttribution}
         url={tileUrl}
-        detectRetina={false}
+        detectRetina={detectRetina}
         maxNativeZoom={maxNativeZoom}
         maxZoom={20}
       />         
@@ -81,6 +82,7 @@ export default function ShareMap({
         const isHost = p.name === "ホスト";
         const isDefaultName = /^P\d+$/.test(p.name);
         const label = isHost ? "ホスト" : ((isSelf && isDefaultName) ? "わたし" : p.name);
+        const badgeText = getParticipantBadge(p.name, { isHost, isSelf });
         
         return (
           <CustomMarker 
@@ -88,6 +90,7 @@ export default function ShareMap({
             position={[p.lat, p.lng]} 
             color={p.color}
             popupText={label}
+            badgeText={badgeText}
             isSelf={isSelf}
             onEditName={(isSelf && !isHost) ? onEditName : undefined}
           />

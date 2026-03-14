@@ -6,8 +6,11 @@ import { useMultiplayer } from "@/hooks/useMultiplayer";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
 import { WarningBanner } from "@/components/WarningBanner";
+import { PermissionGuide } from "@/components/PermissionGuide";
+import { SessionEndedModal } from "@/components/SessionEndedModal";
 import { Power, RefreshCw, Layers } from "lucide-react";
 import { LatLngExpression } from "leaflet";
+import { getParticipantBadge } from "@/lib/participantBadge";
 
 type PageProps = {
   params: Promise<{ shareId: string }>;
@@ -39,7 +42,8 @@ export default function SharePage({ params }: PageProps) {
     isSharing, 
     updateMyName, 
     stopSharing,
-    joinSession
+    joinSession,
+    locationError
   } = useMultiplayer(shareId, false);
 
   const me = participants.find(p => p.id === myId);
@@ -93,20 +97,14 @@ export default function SharePage({ params }: PageProps) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 relative">
         <WarningBanner shareId={shareId} />
+        {locationError === "permission-denied" && <PermissionGuide />}
         <Spinner />
       </div>
     );
   }
 
   if (sessionStatus === "stopped") {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 p-4">
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">共有終了</h1>
-          <p className="text-gray-600">ホストが位置情報の共有を停止しました。</p>
-        </div>
-      </div>
-    );
+    return <SessionEndedModal />;
   }
 
   // 待機中はスピナーを出すのではなく、自分のピンを含む地図を描画する
@@ -115,6 +113,11 @@ export default function SharePage({ params }: PageProps) {
   return (
     <div className="w-full h-screen relative">
       <WarningBanner shareId={shareId} />
+      {locationError === "permission-denied" && (
+        <div className="absolute top-20 left-0 right-0 z-[1200]">
+          <PermissionGuide />
+        </div>
+      )}
       {/* 地図デザイン切り替えUI */}
       <div className="absolute top-12 left-4 z-[1000]">
         <button
@@ -189,10 +192,12 @@ export default function SharePage({ params }: PageProps) {
               className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
               title="ホストの位置"
             >
-              <div 
-                style={{ backgroundColor: host.color }} 
-                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-              ></div>
+              <div
+                style={{ backgroundColor: host.color }}
+                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+              >
+                {getParticipantBadge(host.name, { isHost: true })}
+              </div>
               <p className="text-[10px] font-bold text-center truncate px-1">ホスト</p>
             </button>
           )}
@@ -205,10 +210,12 @@ export default function SharePage({ params }: PageProps) {
               className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
               title="自分の位置"
             >
-              <div 
-                style={{ backgroundColor: me.color }} 
-                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-              ></div>
+              <div
+                style={{ backgroundColor: me.color }}
+                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+              >
+                {getParticipantBadge(me.name, { isSelf: true })}
+              </div>
               <p className="text-[10px] font-bold text-center truncate px-1">{/^P\d+$/.test(me.name) ? "わたし" : me.name}</p>
             </button>
           )}
@@ -224,10 +231,12 @@ export default function SharePage({ params }: PageProps) {
               className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px] shrink-0"
               title={`${p.name}の位置`}
             >
-              <div 
-                style={{ backgroundColor: p.color }} 
-                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-              ></div>
+              <div
+                style={{ backgroundColor: p.color }}
+                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+              >
+                {getParticipantBadge(p.name)}
+              </div>
               <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
             </button>
           ))}

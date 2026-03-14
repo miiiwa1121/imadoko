@@ -1,5 +1,6 @@
 import { LatLngExpression } from "leaflet";
 import type { Participant } from "./ShareMap";
+import { getParticipantBadge } from "@/lib/participantBadge";
 
 type Props = {
   me: Participant | undefined;
@@ -23,10 +24,12 @@ export function ParticipantList({ me, host, others, handleFocus, className, show
             className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
             title="ホストの位置"
           >
-            <div 
-              style={{ backgroundColor: host.color }} 
-              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-            ></div>
+            <div
+              style={{ backgroundColor: host.color }}
+              className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+            >
+              {getParticipantBadge(host.name, { isHost: true })}
+            </div>
             <p className="text-[10px] font-bold text-center truncate px-1">ホスト</p>
           </button>
         )}
@@ -39,10 +42,12 @@ export function ParticipantList({ me, host, others, handleFocus, className, show
             className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
             title="自分の位置"
           >
-            <div 
-              style={{ backgroundColor: me.color }} 
-              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-            ></div>
+            <div
+              style={{ backgroundColor: me.color }}
+              className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+            >
+              {getParticipantBadge(me.name, { isHost: me.name === "ホスト", isSelf: true })}
+            </div>
             <p className="text-[10px] font-bold text-center truncate px-1">
               {me.name === "ホスト" ? "ホスト" : /^P\d+$/.test(me.name) ? "わたし" : me.name}
             </p>
@@ -60,10 +65,12 @@ export function ParticipantList({ me, host, others, handleFocus, className, show
             className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px] shrink-0"
             title={`${p.name}の位置`}
           >
-            <div 
-              style={{ backgroundColor: p.color }} 
-              className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-            ></div>
+            <div
+              style={{ backgroundColor: p.color }}
+              className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+            >
+              {getParticipantBadge(p.name)}
+            </div>
             <span className="text-[10px] font-bold text-center truncate px-1 block w-full">{p.name}</span>
           </button>
         ))}

@@ -7,6 +7,9 @@ import type { ShareMapProps, Participant } from "@/components/ShareMap";
 import { Power, Copy, Check, Layers } from "lucide-react";
 import Spinner from "@/components/Spinner";
 import { WarningBanner } from "@/components/WarningBanner";
+import { PermissionGuide } from "@/components/PermissionGuide";
+import type { LocationErrorType } from "@/hooks/useMultiplayer";
+import { getParticipantBadge } from "@/lib/participantBadge";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
@@ -32,6 +35,7 @@ type Props = {
   myId: string | null;
   handleShareStop: () => void;
   updateMyName: (name: string) => void;
+  locationError: LocationErrorType;
 };
 
 export default function ActiveShareScreen({
@@ -39,7 +43,8 @@ export default function ActiveShareScreen({
   participants,
   myId,
   handleShareStop,
-  updateMyName
+  updateMyName,
+  locationError
 }: Props) {
   // 自分自身と他の参加者を分ける
   // UUIDと名前の両方で安全に自分自身を特定
@@ -93,6 +98,7 @@ export default function ActiveShareScreen({
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 relative">
         <WarningBanner shareId={shareId} />
+        {locationError === "permission-denied" && <PermissionGuide />}
         <Spinner />
         <p className="mt-4 text-gray-600 font-bold">現在地を取得中...</p>
       </div>
@@ -102,6 +108,11 @@ export default function ActiveShareScreen({
   return (
     <div className="w-full h-screen relative">
       <WarningBanner shareId={shareId} />
+      {locationError === "permission-denied" && (
+        <div className="absolute top-20 left-0 right-0 z-[1200]">
+          <PermissionGuide />
+        </div>
+      )}
       {/* 地図デザイン切り替えUI */}
       <div className="absolute top-12 left-4 z-[1000]">
         <button
@@ -167,10 +178,12 @@ export default function ActiveShareScreen({
               className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
               title="自分の位置"
             >
-              <div 
-                style={{ backgroundColor: me.color }} 
-                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-              ></div>
+              <div
+                style={{ backgroundColor: me.color }}
+                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+              >
+                {getParticipantBadge(me.name, { isHost: me.name === "ホスト", isSelf: true })}
+              </div>
               <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : (/^P\d+$/.test(me.name) ? "わたし" : me.name)}</p>
             </button>
           )}
@@ -186,10 +199,12 @@ export default function ActiveShareScreen({
               className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px] shrink-0"
               title={`${p.name}の位置`}
             >
-              <div 
-                style={{ backgroundColor: p.color }} 
-                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
-              ></div>
+              <div
+                style={{ backgroundColor: p.color }}
+                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
+              >
+                {getParticipantBadge(p.name, { isHost: p.name === "ホスト" })}
+              </div>
               <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
             </button>
           ))}
