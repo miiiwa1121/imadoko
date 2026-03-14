@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useMultiplayer } from "@/hooks/useMultiplayer";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
+import { WarningBanner } from "@/components/WarningBanner";
 import { Power, RefreshCw, Layers } from "lucide-react";
 import { LatLngExpression } from "leaflet";
 
@@ -88,7 +89,14 @@ export default function SharePage({ params }: PageProps) {
     []
   );
 
-  if (sessionStatus === "loading") return <Spinner />;
+  if (sessionStatus === "loading") {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50 relative">
+        <WarningBanner shareId={shareId} />
+        <Spinner />
+      </div>
+    );
+  }
 
   if (sessionStatus === "stopped") {
     return (
@@ -106,8 +114,9 @@ export default function SharePage({ params }: PageProps) {
 
   return (
     <div className="w-full h-screen relative">
+      <WarningBanner shareId={shareId} />
       {/* 地図デザイン切り替えUI */}
-      <div className="absolute top-4 left-4 z-[1000]">
+      <div className="absolute top-12 left-4 z-[1000]">
         <button
           onClick={() => setIsMapStyleOpen(!isMapStyleOpen)}
           className="bg-white/90 backdrop-blur p-2 rounded-lg shadow-md border border-gray-100 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
@@ -117,7 +126,7 @@ export default function SharePage({ params }: PageProps) {
         </button>
 
         {isMapStyleOpen && (
-          <div className="absolute top-12 left-0 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-gray-100 w-64">
+          <div className="absolute top-20 left-0 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-gray-100 w-64">
             <p className="text-xs font-bold text-gray-500 mb-2 px-1">地図デザイン</p>
             <div className="grid grid-cols-2 gap-2">
               {MAP_STYLES.map((style, i) => (
