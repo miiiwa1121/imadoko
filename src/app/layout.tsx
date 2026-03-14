@@ -13,9 +13,45 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://imadoko.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Imadoko Share | リアルタイム位置情報共有",
-  description: "アプリ不要で使える、一時的な位置情報共有サービスです。",
+  metadataBase: new URL(siteUrl),
+  title: "imadoko | リアルタイム位置情報共有で待ち合わせをもっと簡単に",
+  description:
+    "アプリ不要・登録不要で使えるリアルタイム位置情報共有サービス。待ち合わせや家族・友人との合流を、リンク共有だけでスムーズに。",
+  keywords: [
+    "位置情報",
+    "共有",
+    "リアルタイム",
+    "待ち合わせ",
+    "アプリ不要",
+    "imadoko",
+  ],
+  openGraph: {
+    title: "imadoko | リアルタイム位置情報共有で待ち合わせをもっと簡単に",
+    description:
+      "アプリ不要・登録不要で使えるリアルタイム位置情報共有サービス。待ち合わせや家族・友人との合流を、リンク共有だけでスムーズに。",
+    url: siteUrl,
+    siteName: "imadoko",
+    locale: "ja_JP",
+    type: "website",
+    images: [
+      {
+        url: "/icon.png",
+        width: 512,
+        height: 512,
+        alt: "imadoko",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "imadoko | リアルタイム位置情報共有で待ち合わせをもっと簡単に",
+    description:
+      "アプリ不要・登録不要で使えるリアルタイム位置情報共有サービス。待ち合わせや家族・友人との合流を、リンク共有だけでスムーズに。",
+    images: ["/icon.png"],
+  },
 };
 
 export const viewport: Viewport = {
