@@ -15,25 +15,31 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
         }
       }}
     >
-  <section className="relative min-h-screen flex flex-col items-center justify-start px-8 sm:px-12 pt-20 sm:pt-24 pb-12 text-center gap-6">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">Imadoko Share</h1>
-        <p className="text-gray-700 text-sm sm:text-base">
-          現在地をリアルタイムで共有できます。
-        </p>
-        <div className="flex items-center justify-center w-full gap-4 animate-bounce">
-          <div className="h-[1.5px] w-8 bg-gray-400"></div>
-          <p className="font-bold text-base sm:text-lg text-gray-800">画面をタップして共有を開始</p>
-          <div className="h-[1.5px] w-8 bg-gray-400"></div>
+      <section className="relative min-h-screen px-8 sm:px-12 pt-20 sm:pt-24 pb-12 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">Imadoko Share</h1>
+          <p className="text-gray-700 text-sm sm:text-base">
+            現在地をリアルタイムで共有できます。
+          </p>
         </div>
-        <div className="mt-8 flex flex-col items-center px-4">
-          <div className="bg-blue-600 text-white p-5 rounded-full shadow-lg mb-4">
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center justify-center w-full gap-4 animate-bounce">
+            <div className="h-[1.5px] w-8 bg-gray-400"></div>
+            <p className="font-bold text-base sm:text-lg text-gray-800">画面をタップして共有を開始</p>
+            <div className="h-[1.5px] w-8 bg-gray-400"></div>
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 top-[60%] flex flex-col items-center gap-4 px-4">
+          <div className="bg-blue-600 text-white p-5 rounded-full shadow-lg">
             <Share2 className="w-10 h-10" />
           </div>
           <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
             <LinkIcon className="w-4 h-4" />
             共有リンクは開始後に発行されます
           </div>
-          <div className="mt-4 flex flex-col items-center text-gray-400 animate-bounce">
+          <div className="flex flex-col items-center text-gray-400 animate-bounce">
             <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-gray-400"></div>
           </div>
         </div>
