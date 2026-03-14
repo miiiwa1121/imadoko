@@ -28,6 +28,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
   const lastUpdateRef = useRef<Record<string, number>>({});
   const lastLocalUpdateRef = useRef<Record<string, number>>({});
+  const recentlyRemovedRef = useRef<Record<string, number>>({});
 
   const getCachedCoords = () => {
     const lastLatStr = sessionStorage.getItem("last_lat");
@@ -117,11 +118,16 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         lng: initialLng
       };
       
+      if (recentlyRemovedRef.current[myParticipantData.id]) {
+        delete recentlyRemovedRef.current[myParticipantData.id];
+      }
+
       setParticipants(prev => {
-        if (!prev.some(p => p.id === myParticipantData.id)) {
+        const exists = prev.some(p => p.id === myParticipantData.id);
+        if (!exists) {
           return [...prev, myParticipantData];
         }
-        return prev;
+        return prev.map(p => p.id === myParticipantData.id ? { ...p, ...myParticipantData } : p);
       });
 
       setMyId(profile.id);
@@ -239,6 +245,10 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         const commitTime = commitTs ? Date.parse(commitTs) : Date.now();
   const targetId = (payload.new as Participant | undefined)?.id ?? (payload.old as Participant | undefined)?.id;
         if (targetId) {
+          const removedAt = recentlyRemovedRef.current[targetId];
+          if (removedAt && Date.now() - removedAt < 5000) {
+            return;
+          }
           const lastLocal = lastLocalUpdateRef.current[targetId] ?? 0;
           if (commitTime < lastLocal) {
             return;
@@ -333,10 +343,12 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const stopSharing = async () => {
     setIsSharing(false);
     if (myId) {
+      const leavingId = myId;
+      recentlyRemovedRef.current[leavingId] = Date.now();
       // 楽観的更新
-      setParticipants(prev => prev.filter(p => p.id !== myId));
-      await supabase.from("session_participants").delete().eq("id", myId);
+      setParticipants(prev => prev.filter(p => p.id !== leavingId));
       setMyId(null);
+      await supabase.from("session_participants").delete().eq("id", leavingId);
     }
   };
 
