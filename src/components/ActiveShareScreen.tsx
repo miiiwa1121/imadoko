@@ -6,6 +6,7 @@ import { LatLngExpression } from "leaflet";
 import type { ShareMapProps, Participant } from "@/components/ShareMap";
 import { Power, Copy, Check, Layers } from "lucide-react";
 import Spinner from "@/components/Spinner";
+import { WarningBanner } from "@/components/WarningBanner";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
@@ -99,8 +100,9 @@ export default function ActiveShareScreen({
 
   return (
     <div className="w-full h-screen relative">
+      <WarningBanner />
       {/* 地図デザイン切り替えUI */}
-      <div className="absolute top-4 left-4 z-[1000]">
+      <div className="absolute top-12 left-4 z-[1000]">
         <button
           onClick={() => setIsMapStyleOpen(!isMapStyleOpen)}
           className="bg-white/90 backdrop-blur p-2 rounded-lg shadow-md border border-gray-100 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
