@@ -22,6 +22,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const [isSharing, setIsSharing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isJoiningRef = useRef(false);
+  const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
 
   const joinSession = useCallback(async (currentSessionId: string) => {
     if (isJoiningRef.current) return;
@@ -130,9 +131,22 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         
+        // ローカルのUI（自分のピン）は常に最新に滑らかに動かす
         setParticipants(prev => prev.map(p => 
           p.id === myId ? { ...p, lat: latitude, lng: longitude } : p
         ));
+
+        if (lastSentPosRef.current) {
+          const dLat = Math.abs(lastSentPosRef.current.lat - latitude);
+          const dLng = Math.abs(lastSentPosRef.current.lng - longitude);
+          // 約5m未満の移動（GPSのブレ）ならDB通信をスキップ
+          if (dLat < 0.00005 && dLng < 0.00005) {
+            return;
+          }
+        }
+
+        // 5m以上動いた場合のみ通信を実行
+        lastSentPosRef.current = { lat: latitude, lng: longitude };
 
         // ★自己修復機能②：更新時に「自分」がDBから消されていないかチェックする
         const { data } = await supabase
@@ -163,7 +177,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         }
       },
       (err) => console.error(err),
-      { enableHighAccuracy: true, maximumAge: 60000, timeout: 5000 }
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 2500 }
     );
   }, [isSharing, myId, isHost, sessionId]);
 
@@ -230,7 +244,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   useEffect(() => {
     if (isSharing && myId) {
       updateLocation(); 
-      intervalRef.current = setInterval(updateLocation, 10000); 
+      intervalRef.current = setInterval(updateLocation, 3000); 
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
