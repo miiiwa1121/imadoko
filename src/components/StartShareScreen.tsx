@@ -23,16 +23,11 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
         <p className="text-gray-700 text-sm sm:text-base">
           現在地をリアルタイムで共有できます。
         </p>
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            handleShareStart();
-          }}
-          disabled={isStarting}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm sm:text-base font-bold text-white shadow-lg hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {isStarting ? "共有を準備中..." : "共有を開始する"}
-        </button>
+        <div className="mt-6 flex items-center justify-center w-full gap-4 animate-bounce">
+          <div className="h-[1.5px] w-8 bg-gray-400"></div>
+          <p className="font-bold text-base sm:text-lg text-gray-800">画面をタップして共有を開始</p>
+          <div className="h-[1.5px] w-8 bg-gray-400"></div>
+        </div>
         <button
           onClick={() => setIsDetailsOpen((prev) => !prev)}
           className="text-xs font-bold text-gray-500 hover:text-gray-700 transition"
