@@ -33,6 +33,9 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
             <LinkIcon className="w-4 h-4" />
             共有リンクは開始後に発行されます
           </div>
+          <div className="mt-4 flex flex-col items-center text-gray-400 animate-bounce">
+            <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-gray-400"></div>
+          </div>
         </div>
       </section>
 
