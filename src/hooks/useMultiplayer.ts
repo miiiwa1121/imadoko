@@ -27,6 +27,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const isJoiningRef = useRef(false);
   const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
   const lastUpdateRef = useRef<Record<string, number>>({});
+  const lastLocalUpdateRef = useRef<Record<string, number>>({});
 
   const getCachedCoords = () => {
     const lastLatStr = sessionStorage.getItem("last_lat");
@@ -152,6 +153,13 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         sessionStorage.setItem("last_lng", longitude.toString());
         sessionStorage.setItem("last_pos_at", Date.now().toString());
 
+        const localUpdateTime = Date.now();
+        lastLocalUpdateRef.current[myId] = localUpdateTime;
+
+        setParticipants(prev => prev.map(p => 
+          p.id === myId ? { ...p, lat: latitude, lng: longitude } : p
+        ));
+
         if (lastSentPosRef.current) {
           const dLat = Math.abs(lastSentPosRef.current.lat - latitude);
           const dLng = Math.abs(lastSentPosRef.current.lng - longitude);
@@ -231,6 +239,10 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         const commitTime = commitTs ? Date.parse(commitTs) : Date.now();
   const targetId = (payload.new as Participant | undefined)?.id ?? (payload.old as Participant | undefined)?.id;
         if (targetId) {
+          const lastLocal = lastLocalUpdateRef.current[targetId] ?? 0;
+          if (commitTime < lastLocal) {
+            return;
+          }
           const lastTime = lastUpdateRef.current[targetId] ?? 0;
           if (commitTime < lastTime) {
             return;
