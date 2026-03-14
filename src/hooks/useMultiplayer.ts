@@ -131,6 +131,10 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         
+        // リロード時に備えて最新の座標を即座に保存
+        sessionStorage.setItem("last_lat", latitude.toString());
+        sessionStorage.setItem("last_lng", longitude.toString());
+
         // ローカルのUI（自分のピン）は常に最新に滑らかに動かす
         setParticipants(prev => prev.map(p => 
           p.id === myId ? { ...p, lat: latitude, lng: longitude } : p
