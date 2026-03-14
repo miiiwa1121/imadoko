@@ -155,8 +155,8 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         if (lastSentPosRef.current) {
           const dLat = Math.abs(lastSentPosRef.current.lat - latitude);
           const dLng = Math.abs(lastSentPosRef.current.lng - longitude);
-          // 約5m未満の移動（GPSのブレ）ならDB通信をスキップ
-          if (dLat < 0.00005 && dLng < 0.00005) {
+          // 約3m未満の移動（GPSのブレ）ならDB通信をスキップ
+          if (dLat < 0.000027 && dLng < 0.000027) {
             return;
           }
         }
