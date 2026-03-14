@@ -20,6 +20,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const [myId, setMyId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<string>("loading");
   const [isSharing, setIsSharing] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isJoiningRef = useRef(false);
   const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
@@ -67,7 +68,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         if (isHost && existingHost) return;
 
         const nextNum = existing && existing.length > 0 ? existing[0].participant_num + 1 : 1;
-        const initialName = isHost ? "ホスト" : `P${nextNum}`;
+        // UUID(nanoid等)をベースにした安全な名前にフォールバックすることでレースコンディションでの名前被りを防止
+        const shortId = nanoid(4);
+        const initialName = isHost ? "ホスト" : `P${nextNum}-${shortId}`;
         const color = PALETTE[(nextNum - 1) % PALETTE.length];
 
         profile = {
@@ -110,7 +113,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
 
       setMyId(profile.id);
       setIsSharing(true);
-      // 通信の効率化に伴い、ここでの全体再取得(fetchParticipants)は省略・または並行処理で任せる.
+      // 通信の効率化に伴い、ここでの全体再取得(fetchParticipants)は省略・または並行処理で任せる
     } finally {
       isJoiningRef.current = false;
     }
@@ -148,35 +151,33 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         // 5m以上動いた場合のみ通信を実行
         lastSentPosRef.current = { lat: latitude, lng: longitude };
 
-        // ★自己修復機能②：更新時に「自分」がDBから消されていないかチェックする
-        const { data } = await supabase
-          .from("session_participants")
-          .update({ lat: latitude, lng: longitude })
-          .eq("id", myId)
-          .select("id");
-          
-        // もしデータが無かったら（リロード等で消されてしまっていたら）、プロフィールを再挿入！
-        if (data && data.length === 0) {
-          const storedStr = sessionStorage.getItem(`profile-${sessionId}`);
-          if (storedStr) {
-            const profile = JSON.parse(storedStr);
-            await supabase.from("session_participants").upsert({
-              id: profile.id,
-              session_id: sessionId,
-              participant_num: profile.num,
-              name: profile.name,
-              color: profile.color,
-              lat: latitude,
-              lng: longitude
-            });
-          }
+        // ★DB通信の最適化：update() + select() ではなく、一発でupsert()する設計に改善
+        const storedStr = sessionStorage.getItem(`profile-${sessionId}`);
+        if (storedStr) {
+          const profile = JSON.parse(storedStr);
+          await supabase.from("session_participants").upsert({
+            id: profile.id,
+            session_id: sessionId,
+            participant_num: profile.num,
+            name: profile.name,
+            color: profile.color,
+            lat: latitude,
+            lng: longitude
+          }, { onConflict: "id" });
         }
 
         if (isHost) {
            await supabase.from("sessions").update({ lat: latitude, lng: longitude, status: 'active' }).eq("id", sessionId);
         }
       },
-      (err) => console.error(err),
+      (err) => {
+        console.error(err);
+        if (err.code === err.PERMISSION_DENIED) {
+          setGpsError("設定から位置情報を許可してください");
+        } else {
+          setGpsError("位置情報の取得に失敗しました");
+        }
+      },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   }, [isSharing, myId, isHost, sessionId]);
@@ -270,8 +271,19 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         navigator.sendBeacon("/api/leave-multiplayer", blob);
       }
     };
+
+    const handleVisibilityChangeForExit = () => {
+      if (document.visibilityState === 'hidden') {
+        handleTabClose();
+      }
+    };
+
     window.addEventListener("pagehide", handleTabClose);
-    return () => window.removeEventListener("pagehide", handleTabClose);
+    document.addEventListener("visibilitychange", handleVisibilityChangeForExit);
+    return () => {
+      window.removeEventListener("pagehide", handleTabClose);
+      document.removeEventListener("visibilitychange", handleVisibilityChangeForExit);
+    };
   }, [myId, sessionId]);
 
   const updateMyName = async (newName: string) => {
@@ -316,6 +328,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     sessionStatus, 
     isSharing, 
     setIsSharing,
+    gpsError,
     updateMyName,
     stopSharing,
     endSessionForEveryone,

@@ -13,6 +13,7 @@ export default function Home() {
   const [shareId, setShareId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -27,7 +28,10 @@ export default function Home() {
           sessionStorage.setItem("last_lat", pos.coords.latitude.toString());
           sessionStorage.setItem("last_lng", pos.coords.longitude.toString());
         },
-        (err) => { console.error("GPSウォームアップ失敗", err); },
+        (err) => { 
+          console.error("GPSウォームアップ失敗", err); 
+          setGpsError("位置情報の取得に失敗しました。"); // エラーメッセージを設定
+        },
         { enableHighAccuracy: true, maximumAge: 60000, timeout: 5000 }
       );
     }
@@ -36,6 +40,7 @@ export default function Home() {
   const {
     participants,
     myId,
+    gpsError: multiplayerGpsError,
     endSessionForEveryone,
     updateMyName,
     joinSession
@@ -101,6 +106,7 @@ export default function Home() {
       shareId={shareId}
       participants={participants}
       myId={myId}
+      gpsError={multiplayerGpsError || gpsError}
       handleShareStop={handleShareStop}
       updateMyName={updateMyName}
     />
