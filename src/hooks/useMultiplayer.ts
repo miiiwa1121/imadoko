@@ -26,6 +26,19 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isJoiningRef = useRef(false);
   const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
+  const lastUpdateRef = useRef<Record<string, number>>({});
+
+  const getCachedCoords = () => {
+    const lastLatStr = sessionStorage.getItem("last_lat");
+    const lastLngStr = sessionStorage.getItem("last_lng");
+    const lastAtStr = sessionStorage.getItem("last_pos_at");
+    if (!lastLatStr || !lastLngStr || !lastAtStr) return { lat: null, lng: null };
+    const lastAt = Number(lastAtStr);
+    if (Number.isNaN(lastAt)) return { lat: null, lng: null };
+    const isFresh = Date.now() - lastAt < 30000;
+    if (!isFresh) return { lat: null, lng: null };
+    return { lat: parseFloat(lastLatStr), lng: parseFloat(lastLngStr) };
+  };
 
   const joinSession = useCallback(async (currentSessionId: string) => {
     if (isJoiningRef.current) return;
@@ -36,11 +49,10 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       const storedStr = sessionStorage.getItem(profileKey);
       let profile = storedStr ? JSON.parse(storedStr) : null;
 
-      // 事前取得した座標があれば利用する
-      const lastLatStr = sessionStorage.getItem("last_lat");
-      const lastLngStr = sessionStorage.getItem("last_lng");
-      const initialLat = lastLatStr ? parseFloat(lastLatStr) : null;
-      const initialLng = lastLngStr ? parseFloat(lastLngStr) : null;
+  // 事前取得した座標があれば利用する
+  const cachedCoords = getCachedCoords();
+  const initialLat = cachedCoords.lat;
+  const initialLng = cachedCoords.lng;
 
       if (profile) {
         if (!isHost && profile.name === "ホスト") {
@@ -138,11 +150,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         // リロード時に備えて最新の座標を即座に保存
         sessionStorage.setItem("last_lat", latitude.toString());
         sessionStorage.setItem("last_lng", longitude.toString());
-
-        // ローカルのUI（自分のピン）は常に最新に滑らかに動かす
-        setParticipants(prev => prev.map(p => 
-          p.id === myId ? { ...p, lat: latitude, lng: longitude } : p
-        ));
+        sessionStorage.setItem("last_pos_at", Date.now().toString());
 
         if (lastSentPosRef.current) {
           const dLat = Math.abs(lastSentPosRef.current.lat - latitude);
@@ -219,6 +227,16 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     const participantsChannel = supabase
       .channel(`participants-${sessionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, (payload) => {
+        const commitTs = (payload as { commit_timestamp?: string }).commit_timestamp;
+        const commitTime = commitTs ? Date.parse(commitTs) : Date.now();
+  const targetId = (payload.new as Participant | undefined)?.id ?? (payload.old as Participant | undefined)?.id;
+        if (targetId) {
+          const lastTime = lastUpdateRef.current[targetId] ?? 0;
+          if (commitTime < lastTime) {
+            return;
+          }
+          lastUpdateRef.current[targetId] = commitTime;
+        }
         // ③ 通信の効率化：DBの再取得(fetchParticipants)を待たずに、届いたpayloadで直接状態を更新する
         if (payload.eventType === 'INSERT') {
           const newParticipant = payload.new as Participant;
@@ -235,6 +253,9 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
             return prev.map(p => p.id === updatedParticipant.id ? { ...p, ...updatedParticipant } : p);
           });
         } else if (payload.eventType === 'DELETE') {
+          if (targetId) {
+            delete lastUpdateRef.current[targetId];
+          }
           setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
         }
       })
