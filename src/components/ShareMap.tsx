@@ -22,6 +22,7 @@ export type ShareMapProps = {
   tileUrl?: string;
   tileAttribution?: string;
   maxNativeZoom?: number;
+  detectRetina?: boolean;
 };
 
 function MapUpdater({ focusLocation, focusKey }: { focusLocation?: LatLngExpression | null, focusKey?: number }) {
@@ -42,7 +43,8 @@ export default function ShareMap({
   onEditName,
   tileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
   tileAttribution = '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-  maxNativeZoom = 18
+  maxNativeZoom = 18,
+  detectRetina = false
 }: ShareMapProps) {
   // ① ホストの座標を最優先で探す
   const hostParticipant = participants.find(p => p.name === "ホスト" && p.lat !== null && p.lng !== null);
@@ -70,6 +72,7 @@ export default function ShareMap({
         url={tileUrl}
         maxNativeZoom={maxNativeZoom}
         maxZoom={20}
+        detectRetina={detectRetina}
       />         
       {participants.map((p) => {
         if (p.lat === null || p.lng === null) return null;
