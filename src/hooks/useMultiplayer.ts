@@ -124,7 +124,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     if (data) setParticipants(data);
   };
 
-  const updateLocation = useCallback(async () => {
+  const fetchAndSendLocation = useCallback(async () => {
     if (!isSharing || !myId || !sessionId) return;
 
     navigator.geolocation.getCurrentPosition(
@@ -177,7 +177,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         }
       },
       (err) => console.error(err),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 2500 }
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   }, [isSharing, myId, isHost, sessionId]);
 
@@ -242,14 +242,26 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   }, [sessionId, isHost, joinSession]);
 
   useEffect(() => {
-    if (isSharing && myId) {
-      updateLocation(); 
-      intervalRef.current = setInterval(updateLocation, 3000); 
-    }
+    if (!isSharing || !myId) return;
+
+    // 初回1回実行
+    fetchAndSendLocation(); 
+    // 定期実行（3秒ごと）
+    intervalRef.current = setInterval(fetchAndSendLocation, 3000); 
+
+    // ③ 画面復帰時の即時取得処理 (Page Visibility API)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchAndSendLocation();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isSharing, myId, updateLocation]);
+  }, [isSharing, myId, fetchAndSendLocation]);
 
   useEffect(() => {
     const handleTabClose = () => {
