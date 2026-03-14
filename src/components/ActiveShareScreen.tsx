@@ -4,14 +4,26 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
 import type { ShareMapProps, Participant } from "@/components/ShareMap";
-import { Power, Copy, Check } from "lucide-react";
+import { Power, Copy, Check, Layers } from "lucide-react";
 import Spinner from "@/components/Spinner";
-import { MAP_STYLES } from "@/constants/mapStyles";
-import { MapStyleSelector } from "@/components/MapStyleSelector";
-import { ParticipantList } from "@/components/ParticipantList";
-import { WarningBanner } from "@/components/WarningBanner";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
+
+const MAP_STYLES = [
+  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; 国土地理院", maxNativeZoom: 18 },
+  { name: "OSM Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap", maxNativeZoom: 18 },
+  { name: "CARTO Voyager", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", attribution: "&copy; CARTO", maxNativeZoom: 20 },
+  { name: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "&copy; Esri", maxNativeZoom: 18 }
+];
+
+const getThumbnail = (url: string) => {
+  return url
+    .replace("{s}", "a")
+    .replace("{z}", "16")
+    .replace("{x}", "58208")
+    .replace("{y}", "25800")
+    .replace("{r}", "");
+};
 
 type Props = {
   shareId: string;
@@ -19,7 +31,6 @@ type Props = {
   myId: string | null;
   handleShareStop: () => void;
   updateMyName: (name: string) => void;
-  gpsError: string | null;
 };
 
 export default function ActiveShareScreen({
@@ -27,12 +38,14 @@ export default function ActiveShareScreen({
   participants,
   myId,
   handleShareStop,
-  updateMyName,
-  gpsError
+  updateMyName
 }: Props) {
   // 自分自身と他の参加者を分ける
+  // UUIDと名前の両方で安全に自分自身を特定
   const me = participants.find(p => p.id === myId);
   const host = participants.find(p => p.name === "ホスト");
+  
+  // 自分以外の参加者のみを抽出（meが見つかった場合、そのIDを除外）
   const others = participants.filter(p => !me || p.id !== me.id);
 
   const [isCopied, setIsCopied] = useState(false);
@@ -40,16 +53,13 @@ export default function ActiveShareScreen({
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
   const [mapStyleIndex, setMapStyleIndex] = useState(2);
+  const [isMapStyleOpen, setIsMapStyleOpen] = useState(false);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/share/${shareId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch {
-      alert("クリップボードへのコピーに失敗しました。手動でURLをコピーしてください。");
-    }
+    await navigator.clipboard.writeText(url);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleFocus = useCallback((loc: LatLngExpression | null) => {
@@ -78,16 +88,6 @@ export default function ActiveShareScreen({
     }
   };
 
-  if (gpsError) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
-        <p className="text-red-600 font-bold mb-4">⚠️ GPSエラー</p>
-        <p className="text-gray-700">{gpsError}</p>
-        <p className="text-sm text-gray-500 mt-2">設定から位置情報の利用を許可し、ページをリロードしてください。</p>
-      </div>
-    );
-  }
-
   if (!me?.lat || !me?.lng) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -99,13 +99,46 @@ export default function ActiveShareScreen({
 
   return (
     <div className="w-full h-screen relative">
-      <WarningBanner />
+      {/* 地図デザイン切り替えUI */}
+      <div className="absolute top-4 left-4 z-[1000]">
+        <button
+          onClick={() => setIsMapStyleOpen(!isMapStyleOpen)}
+          className="bg-white/90 backdrop-blur p-2 rounded-lg shadow-md border border-gray-100 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
+          title="地図のデザインを変更"
+        >
+          <Layers size={20} />
+        </button>
 
-      <MapStyleSelector 
-        mapStyleIndex={mapStyleIndex} 
-        setMapStyleIndex={setMapStyleIndex} 
-        className="absolute top-12 left-4 z-[1000]"
-      />
+        {isMapStyleOpen && (
+          <div className="absolute top-12 left-0 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-gray-100 w-64">
+            <p className="text-xs font-bold text-gray-500 mb-2 px-1">地図デザイン</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MAP_STYLES.map((style, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setMapStyleIndex(i);
+                    setIsMapStyleOpen(false);
+                  }}
+                  className={`flex flex-col items-center p-1.5 rounded-lg border-2 transition-all ${
+                    mapStyleIndex === i 
+                      ? "border-blue-500 bg-blue-50/50" 
+                      : "border-transparent hover:bg-gray-100"
+                  }`}
+                >
+                  <div 
+                    className="w-full h-16 bg-gray-200 rounded-md mb-1.5 bg-cover bg-center shadow-sm border border-gray-200"
+                    style={{ backgroundImage: `url(${getThumbnail(style.url)})` }}
+                  />
+                  <span className="text-[10px] font-bold text-gray-700 w-full text-center truncate">
+                    {style.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {myId && (
         <ShareMap
@@ -120,13 +153,45 @@ export default function ActiveShareScreen({
         />
       )}
 
-      <ParticipantList 
-        me={me} 
-        host={host} 
-        others={others} 
-        handleFocus={handleFocus} 
-        className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]"
-      />
+      {/* フォーカスボタン（スクロール可能リスト） */}
+      <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
+        {/* 自分を最上部に固定 */}
+        <div className="flex flex-col gap-2 shrink-0">
+          {me && (
+            <button
+              onClick={() => me.lat !== null && me.lng !== null && handleFocus([me.lat, me.lng])}
+              disabled={!me.lat}
+              className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
+              title="自分の位置"
+            >
+              <div 
+                style={{ backgroundColor: me.color }} 
+                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
+              ></div>
+              <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : (/^P\d+$/.test(me.name) ? "わたし" : me.name)}</p>
+            </button>
+          )}
+        </div>
+        
+        {/* 他の参加者（画面が許す限り表示、超えたらスクロール） */}
+        <div className="flex flex-col gap-2 overflow-y-auto scrollbar-hide pr-1 pb-2">
+          {others.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => p.lat !== null && p.lng !== null && handleFocus([p.lat, p.lng])}
+              disabled={!p.lat}
+              className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px] shrink-0"
+              title={`${p.name}の位置`}
+            >
+              <div 
+                style={{ backgroundColor: p.color }} 
+                className="w-4 h-4 rounded-full mx-auto mb-1 border-2 border-white shadow-sm"
+              ></div>
+              <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ホスト操作パネル */}
       <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-center pointer-events-none">
