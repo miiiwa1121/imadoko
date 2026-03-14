@@ -68,9 +68,10 @@ export default function ShareMap({
     >
       <MapUpdater focusLocation={focusLocation} focusKey={focusKey} />
       <TileLayer
+        key={tileUrl}
         attribution={tileAttribution}
         url={tileUrl}
-        detectRetina={detectRetina}
+        detectRetina={false}
         maxNativeZoom={maxNativeZoom}
         maxZoom={20}
       />         

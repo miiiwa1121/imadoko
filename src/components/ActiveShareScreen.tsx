@@ -10,10 +10,10 @@ import Spinner from "@/components/Spinner";
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
 
 const MAP_STYLES = [
-  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; 国土地理院", maxNativeZoom: 18, detectRetina: false },
-  { name: "OSM Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap", maxNativeZoom: 18, detectRetina: false },
-  { name: "CARTO Voyager", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", attribution: "&copy; CARTO", maxNativeZoom: 20, detectRetina: true },
-  { name: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "&copy; Esri", maxNativeZoom: 18, detectRetina: false }
+  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; 国土地理院", maxNativeZoom: 18 },
+  { name: "OSM Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap", maxNativeZoom: 18 },
+  { name: "CARTO Voyager", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", attribution: "&copy; CARTO", maxNativeZoom: 20 },
+  { name: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "&copy; Esri", maxNativeZoom: 18 }
 ];
 
 const getThumbnail = (url: string) => {
@@ -150,7 +150,6 @@ export default function ActiveShareScreen({
           tileUrl={MAP_STYLES[mapStyleIndex].url}
           tileAttribution={MAP_STYLES[mapStyleIndex].attribution}
           maxNativeZoom={MAP_STYLES[mapStyleIndex].maxNativeZoom}
-          detectRetina={MAP_STYLES[mapStyleIndex].detectRetina}
         />
       )}
 
