@@ -7,7 +7,7 @@ type Props = {
 export default function StartShareScreen({ handleShareStart }: Props) {
   return (
     <div 
-      className="h-screen w-full bg-gray-100 cursor-pointer relative"
+      className="h-screen w-full bg-white/70 backdrop-blur-sm cursor-pointer relative pointer-events-auto"
       onClick={handleShareStart}
     >
       <div className="text-center pt-24 px-4">
