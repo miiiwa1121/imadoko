@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Share2, LinkIcon } from "lucide-react";
 
 type Props = {
@@ -7,11 +6,9 @@ type Props = {
 };
 
 export default function StartShareScreen({ handleShareStart, isStarting = false }: Props) {
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
   return (
     <div
-      className="h-screen w-full bg-white/70 backdrop-blur-sm relative pointer-events-auto"
+      className="min-h-screen w-full bg-white/70 backdrop-blur-sm relative pointer-events-auto"
       onClick={() => {
         if (!isStarting) {
           handleShareStart();
@@ -40,6 +37,25 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
         <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
           <LinkIcon className="w-4 h-4" />
           共有リンクは開始後に発行されます
+        </div>
+      </div>
+
+      <div className="relative z-[900] mt-24 pb-20 px-6 sm:px-10 pointer-events-auto">
+        <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-8 space-y-8">
+          <section>
+            <h2 className="text-lg font-bold text-gray-900 mb-3">使い方</h2>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              まずは画面をタップして共有を開始します。リンクが発行されたら、相手に送信するだけで位置情報がリアルタイムに共有されます。
+              ブラウザを閉じると共有は自動的に停止します。
+            </p>
+          </section>
+          <section>
+            <h2 className="text-lg font-bold text-gray-900 mb-3">開発者について</h2>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              個人開発として運営しているプロジェクトです。ユーザーの体験を最優先に、軽量で安心して使えるサービスを目指しています。
+              ご意見・ご要望は今後の改善に活かします。
+            </p>
+          </section>
         </div>
       </div>
     </div>

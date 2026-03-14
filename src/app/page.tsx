@@ -120,13 +120,15 @@ export default function Home() {
   if (!isMounted || !shareId) {
     const overlayConfig = loadingPhase !== "idle" ? LOADING_LABELS[loadingPhase] : null;
     return (
-      <div className="w-full h-screen relative">
-        <ShareMap
-          participants={[]} // トップ画面なので参加者は空
-          myId="top-page-user" // ダミーのID
-        />
+      <div className="w-full min-h-screen relative">
+        <div className="fixed inset-0 z-0">
+          <ShareMap
+            participants={[]} // トップ画面なので参加者は空
+            myId="top-page-user" // ダミーのID
+          />
+        </div>
         {/* 画面の上に、共有開始ボタンなどのUIを重ねる */}
-        <div className="absolute inset-0 z-[1000] flex flex-col pointer-events-none">
+        <div className="relative z-[1000] flex flex-col pointer-events-none">
           <StartShareScreen handleShareStart={handleShareStart} isStarting={isLoading} />
         </div>
         {overlayConfig && (
