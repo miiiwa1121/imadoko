@@ -110,7 +110,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
 
       setMyId(profile.id);
       setIsSharing(true);
-      // 通信の効率化に伴い、ここでの全体再取得(fetchParticipants)は省略・または並行処理で任せる
+      // 通信の効率化に伴い、ここでの全体再取得(fetchParticipants)は省略・または並行処理で任せる.
     } finally {
       isJoiningRef.current = false;
     }
