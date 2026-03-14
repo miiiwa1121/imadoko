@@ -3,10 +3,25 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { shareId } = await request.json();
+    const { shareId, hostId } = await request.json();
 
-    if (!shareId) {
-      return NextResponse.json({ error: "No shareId provided" }, { status: 400 });
+    if (!shareId || !hostId) {
+      return NextResponse.json({ error: "Missing shareId or hostId" }, { status: 400 });
+    }
+
+    // ホストの検証
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .select("host_id")
+      .eq("id", shareId)
+      .single();
+
+    if (sessionError || !session) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    if (session.host_id !== hostId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // ステータスを 'stopped' に更新
