@@ -15,7 +15,7 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
         }
       }}
     >
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center gap-4">
+  <section className="relative min-h-screen flex flex-col items-center justify-start px-8 sm:px-12 pt-20 sm:pt-24 pb-12 text-center gap-6">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">Imadoko Share</h1>
         <p className="text-gray-700 text-sm sm:text-base">
           現在地をリアルタイムで共有できます。
