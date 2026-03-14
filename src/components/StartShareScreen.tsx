@@ -10,14 +10,24 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   return (
-    <div className="h-screen w-full bg-white/70 backdrop-blur-sm relative pointer-events-auto">
+    <div
+      className="h-screen w-full bg-white/70 backdrop-blur-sm relative pointer-events-auto"
+      onClick={() => {
+        if (!isStarting) {
+          handleShareStart();
+        }
+      }}
+    >
       <div className="flex flex-col items-center px-6 pt-16 text-center gap-4">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">Imadoko Share</h1>
         <p className="text-gray-700 text-sm sm:text-base">
           現在地をリアルタイムで共有できます。
         </p>
         <button
-          onClick={handleShareStart}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleShareStart();
+          }}
           disabled={isStarting}
           className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm sm:text-base font-bold text-white shadow-lg hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
         >
