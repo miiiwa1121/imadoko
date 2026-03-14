@@ -8,7 +8,7 @@ type Props = {
 export default function StartShareScreen({ handleShareStart, isStarting = false }: Props) {
   return (
     <div
-      className="min-h-screen w-full bg-white/70 backdrop-blur-sm relative pointer-events-auto"
+      className="min-h-screen w-full bg-white/50 backdrop-blur-sm relative pointer-events-auto"
       onClick={() => {
         if (!isStarting) {
           handleShareStart();
@@ -46,7 +46,7 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
       </section>
 
       <section className="relative z-[900] px-6 sm:px-10 pb-20">
-        <div className="max-w-4xl mx-auto bg-white/90 backdrop-blur border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-10 space-y-10">
+        <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-10 space-y-10">
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-3">使い方</h2>
             <p className="text-sm text-gray-600 leading-relaxed">
