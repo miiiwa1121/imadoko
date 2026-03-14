@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useMultiplayer } from "@/hooks/useMultiplayer";
 import type { ShareMapProps } from "@/components/ShareMap";
 import Spinner from "@/components/Spinner";
+import WarningBanner from "@/components/WarningBanner";
 import { Power, RefreshCw, Layers } from "lucide-react";
 import { LatLngExpression } from "leaflet";
 
@@ -107,11 +108,7 @@ export default function SharePage({ params }: PageProps) {
   return (
     <div className="w-full h-screen relative">
       {/* 画面を開いたままにしてください警告（共有中のみ） */}
-      {isSharing && (
-        <div className="absolute top-0 left-0 right-0 z-[2000] bg-yellow-100/90 backdrop-blur-sm text-yellow-800 text-[11px] sm:text-xs font-bold py-2 px-4 text-center shadow-sm">
-          ⚠️ リアルタイムで共有するには、画面を開いたままにしてください
-        </div>
-      )}
+      {isSharing && <WarningBanner />}
 
       {/* 地図デザイン切り替えUI */}
       <div className={`absolute ${isSharing ? 'top-12' : 'top-4'} left-4 z-[1000] transition-all`}>
