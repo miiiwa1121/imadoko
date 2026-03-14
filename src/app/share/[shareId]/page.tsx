@@ -106,15 +106,8 @@ export default function SharePage({ params }: PageProps) {
 
   return (
     <div className="w-full h-screen relative">
-      {/* 画面を開いたままにしてください警告（共有中のみ） */}
-      {isSharing && (
-        <div className="absolute top-0 left-0 right-0 z-[2000] bg-yellow-100/90 backdrop-blur-sm text-yellow-800 text-[11px] sm:text-xs font-bold py-2 px-4 text-center shadow-sm">
-          ⚠️ リアルタイムで共有するには、画面を開いたままにしてください
-        </div>
-      )}
-
       {/* 地図デザイン切り替えUI */}
-      <div className={`absolute ${isSharing ? 'top-12' : 'top-4'} left-4 z-[1000] transition-all`}>
+      <div className="absolute top-4 left-4 z-[1000]">
         <button
           onClick={() => setIsMapStyleOpen(!isMapStyleOpen)}
           className="bg-white/90 backdrop-blur p-2 rounded-lg shadow-md border border-gray-100 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
@@ -169,14 +162,14 @@ export default function SharePage({ params }: PageProps) {
 
       {/* ホスト位置取得中の表示 */}
       {(!host?.lat || !host?.lng) && (
-        <div className={`absolute ${isSharing ? 'top-12' : 'top-4'} left-16 z-[1000] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2 transition-all`}>
+        <div className="absolute top-4 left-16 z-[1000] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
           <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-[10px] font-bold text-gray-600">ホストを待機中...</span>
         </div>
       )}
 
       {/* フォーカスボタン（スクロール可能リスト） */}
-      <div className={`absolute ${isSharing ? 'top-20' : 'top-16'} right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)] transition-all`}>
+      <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
         {/* ホスト＆自分を最上部に固定 */}
         <div className="flex flex-col gap-2 shrink-0">
           {/* ホスト */}
