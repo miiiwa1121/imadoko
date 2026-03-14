@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { Marker, Popup } from "react-leaflet";
-import { LatLngExpression, divIcon } from "leaflet";
+import { LatLngExpression, divIcon, latLng, type Marker as LeafletMarker } from "leaflet";
 import { User, MapPin } from 'lucide-react';
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -18,12 +18,45 @@ export type CustomMarkerProps = {
 export default function CustomMarker({ position, color, popupText, badgeText, isSelf, onEditName }: CustomMarkerProps) {
   const [inputValue, setInputValue] = useState(popupText);
   const [isEditing, setIsEditing] = useState(false);
+  const markerRef = useRef<LeafletMarker | null>(null);
+  const previousPositionRef = useRef<LatLngExpression | null>(null);
 
   useEffect(() => {
     if (!isEditing) {
       setInputValue(popupText);
     }
   }, [popupText, isEditing]);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    const next = latLng(position);
+    const previous = previousPositionRef.current ? latLng(previousPositionRef.current) : null;
+
+    if (!previous) {
+      marker.setLatLng(next);
+      previousPositionRef.current = position;
+      return;
+    }
+
+    const duration = 600;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const lat = previous.lat + (next.lat - previous.lat) * progress;
+      const lng = previous.lng + (next.lng - previous.lng) * progress;
+      marker.setLatLng([lat, lng]);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        previousPositionRef.current = position;
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [position]);
 
   const IconComponent = isSelf ? MapPin : User;
   
@@ -71,7 +104,7 @@ export default function CustomMarker({ position, color, popupText, badgeText, is
   };
 
   return (
-    <Marker position={position} icon={customIcon}>
+  <Marker position={position} icon={customIcon} ref={markerRef}>
       <Popup className="font-sans font-medium min-w-[120px]" closeButton={false}>
         <div className="text-center flex flex-col gap-2 items-center">
           {onEditName ? (
