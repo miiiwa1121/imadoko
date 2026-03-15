@@ -9,17 +9,11 @@
 
 ## 📸 Screenshot
 
-### Top Screen
-
-![Top screen](public/top_screen.png)
-
-### Host Screen
-
-![Host screen](public/host_screen.png)
-
-### Guest Screen
-
-![Guest screen](public/gest_screen.png)
+<p align="center">
+   <img src="public/top_screen.png" alt="Top screen" width="32%" />
+   <img src="public/host_screen.png" alt="Host screen" width="32%" />
+   <img src="public/gest_screen.png" alt="Guest screen" width="32%" />
+</p>
 
 ---
 
