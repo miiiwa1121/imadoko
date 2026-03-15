@@ -9,11 +9,17 @@
 
 ## 📸 Screenshot
 
-> スクリーンショットを `docs/screenshot.png` などに配置して差し替えてください。
+### Top Screen
 
-```md
-![imadoko screenshot](docs/screenshot.png)
-```
+![Top screen](public/top_screen.png)
+
+### Host Screen
+
+![Host screen](public/host_screen.png)
+
+### Guest Screen
+
+![Guest screen](public/gest_screen.png)
 
 ---
 
