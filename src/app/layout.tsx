@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "imadoko",
   ],
   verification: {
-    google: 'content="YldVdgamsIS0CRmYIZSa9bJ4FTQaxCMXTNurmb5M4Vg" ',
+    google: 'YldVdgamsIS0CRmYIZSa9bJ4FTQaxCMXTNurmb5M4Vg',
   },
   openGraph: {
     title: "imadoko | リアルタイム位置情報共有で待ち合わせをもっと簡単に",
