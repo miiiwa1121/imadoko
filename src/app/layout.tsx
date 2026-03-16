@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = "https://imadoko.vercel.app";
+const siteUrl = "https://imadoko.link";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

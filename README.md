@@ -2,10 +2,10 @@
 
 > リアルタイムで位置共有できる、シンプルで高速なWebアプリ
 
-[![Demo](https://img.shields.io/badge/Demo-Live-blue?style=for-the-badge&logo=vercel)](https://imadoko.vercel.app)
+[![Demo](https://img.shields.io/badge/Demo-Live-blue?style=for-the-badge&logo=vercel)](https://imadoko.link)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-🌐 **Demo:** https://imadoko.vercel.app
+🌐 **Demo:** https://imadoko.link
 
 ## 📸 Screenshot
 
@@ -32,7 +32,7 @@
 
 ## Demo
 
-- **Live URL**: https://imadoko.vercel.app
+- **Live URL**: https://imadoko.link
 
 ### 動作イメージ
 
