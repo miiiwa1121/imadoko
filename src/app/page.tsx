@@ -64,8 +64,20 @@ export default function Home() {
     endSessionForEveryone,
     updateMyName,
     joinSession,
-    locationError
+    locationError,
+    joinLeaveNotification
   } = useMultiplayer(shareId, true);
+
+  useEffect(() => {
+    if (!joinLeaveNotification) return;
+    const { type, name } = joinLeaveNotification;
+    const displayName = name === "ホスト" ? "ホスト" : name;
+    setToast({
+      message: type === "join" ? `${displayName} が参加しました` : `${displayName} が退室しました`,
+      type: "info",
+      onClose: () => setToast(null)
+    });
+  }, [joinLeaveNotification]);
 
   const handleShareStart = async () => {
     setIsLoading(true);

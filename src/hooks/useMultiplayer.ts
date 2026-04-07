@@ -17,18 +17,27 @@ const PALETTE = [
   "#EC4899", "#06B6D4", "#14B8A6", "#F43F5E", "#84CC16"
 ];
 
+export type JoinLeaveNotification = {
+  type: "join" | "leave";
+  name: string;
+  key: number;
+};
+
 export function useMultiplayer(sessionId: string | null, isHost: boolean = false) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [myId, setMyId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<string>("loading");
   const [isSharing, setIsSharing] = useState(false);
   const [locationError, setLocationError] = useState<LocationErrorType>(null);
+  const [joinLeaveNotification, setJoinLeaveNotification] = useState<JoinLeaveNotification | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isJoiningRef = useRef(false);
   const lastSentPosRef = useRef<{lat: number, lng: number} | null>(null);
   const lastUpdateRef = useRef<Record<string, number>>({});
   const lastLocalUpdateRef = useRef<Record<string, number>>({});
   const recentlyRemovedRef = useRef<Record<string, number>>({});
+  const myIdRef = useRef<string | null>(null);
+  const notifKeyRef = useRef(0);
 
   const getCachedCoords = () => {
     const lastLatStr = sessionStorage.getItem("last_lat");
@@ -61,7 +70,18 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
           profile.name = `P${profile.num || Math.floor(Math.random() * 100)}`;
           sessionStorage.setItem(profileKey, JSON.stringify(profile));
         }
-        
+
+        // リロード競合対策：直前の pagehide から 3 秒以内なら sendBeacon の到達を待ってから upsert する
+        const leftAtKey = `leftAt-${profile.id}`;
+        const leftAtStr = sessionStorage.getItem(leftAtKey);
+        if (leftAtStr) {
+          const elapsed = Date.now() - Number(leftAtStr);
+          if (elapsed < 3000) {
+            await new Promise<void>(resolve => setTimeout(resolve, 800));
+          }
+          sessionStorage.removeItem(leftAtKey);
+        }
+
         // ★自己修復機能①：リロードで削除指令が走っていても、問答無用で「上書き(Upsert)」してデータを復活させる
         await supabase.from("session_participants").upsert({
           id: profile.id,
@@ -130,6 +150,7 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         return prev.map(p => p.id === myParticipantData.id ? { ...p, ...myParticipantData } : p);
       });
 
+      myIdRef.current = profile.id;
       setMyId(profile.id);
       setIsSharing(true);
       // 通信の効率化に伴い、ここでの全体再取得(fetchParticipants)は省略・または並行処理で任せる
@@ -143,7 +164,14 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
       .from("session_participants")
       .select("*")
       .eq("session_id", currentSessionId);
-    if (data) setParticipants(data);
+    if (data) {
+      setParticipants(prev => {
+        // DBにまだ反映されていない楽観的追加済み参加者を失わないよう、ローカルのみの行を末尾に保持する
+        const dbIds = new Set(data.map((p: Participant) => p.id));
+        const localOnly = prev.filter(p => !dbIds.has(p.id));
+        return [...data, ...localOnly];
+      });
+    }
   };
 
   const updateLocation = useCallback(async () => {
@@ -245,19 +273,22 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
         const commitTime = commitTs ? Date.parse(commitTs) : Date.now();
   const targetId = (payload.new as Participant | undefined)?.id ?? (payload.old as Participant | undefined)?.id;
         if (targetId) {
-          const removedAt = recentlyRemovedRef.current[targetId];
-          if (removedAt && Date.now() - removedAt < 5000) {
-            return;
+          // DELETEは常に通過させる（タイムスタンプや楽観的削除フラグで弾かない）
+          if (payload.eventType !== 'DELETE') {
+            const removedAt = recentlyRemovedRef.current[targetId];
+            if (removedAt && Date.now() - removedAt < 5000) {
+              return;
+            }
+            const lastLocal = lastLocalUpdateRef.current[targetId] ?? 0;
+            if (commitTime < lastLocal) {
+              return;
+            }
+            const lastTime = lastUpdateRef.current[targetId] ?? 0;
+            if (commitTime < lastTime) {
+              return;
+            }
+            lastUpdateRef.current[targetId] = commitTime;
           }
-          const lastLocal = lastLocalUpdateRef.current[targetId] ?? 0;
-          if (commitTime < lastLocal) {
-            return;
-          }
-          const lastTime = lastUpdateRef.current[targetId] ?? 0;
-          if (commitTime < lastTime) {
-            return;
-          }
-          lastUpdateRef.current[targetId] = commitTime;
         }
         // ③ 通信の効率化：DBの再取得(fetchParticipants)を待たずに、届いたpayloadで直接状態を更新する
         if (payload.eventType === 'INSERT') {
@@ -269,6 +300,10 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
             }
             return prev;
           });
+          if (newParticipant.id !== myIdRef.current) {
+            notifKeyRef.current += 1;
+            setJoinLeaveNotification({ type: "join", name: newParticipant.name, key: notifKeyRef.current });
+          }
         } else if (payload.eventType === 'UPDATE') {
           const updatedParticipant = payload.new as Participant;
           setParticipants(prev => {
@@ -278,7 +313,19 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
           if (targetId) {
             delete lastUpdateRef.current[targetId];
           }
-          setParticipants(prev => prev.filter(p => p.id !== payload.old.id));
+          const leavingId = (payload.old as { id: string }).id;
+          if (leavingId !== myIdRef.current) {
+            setParticipants(prev => {
+              const leaving = prev.find(p => p.id === leavingId);
+              if (leaving) {
+                notifKeyRef.current += 1;
+                setJoinLeaveNotification({ type: "leave", name: leaving.name, key: notifKeyRef.current });
+              }
+              return prev.filter(p => p.id !== leavingId);
+            });
+          } else {
+            setParticipants(prev => prev.filter(p => p.id !== leavingId));
+          }
         }
       })
       .subscribe();
@@ -313,6 +360,8 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
   useEffect(() => {
     const handleTabClose = () => {
       if (myId) {
+        // リロード時の競合対策：退出時刻を記録しておき、再参加時に sendBeacon の完了を待てるようにする
+        sessionStorage.setItem(`leftAt-${myId}`, Date.now().toString());
         const blob = new Blob([JSON.stringify({ participantId: myId, sessionId })], { type: "application/json" });
         navigator.sendBeacon("/api/leave-multiplayer", blob);
       }
@@ -359,13 +408,14 @@ export function useMultiplayer(sessionId: string | null, isHost: boolean = false
     await supabase.from("session_participants").delete().eq("session_id", sessionId);
   };
 
-  return { 
-    participants, 
-    myId, 
-    sessionStatus, 
-    isSharing, 
+  return {
+    participants,
+    myId,
+    sessionStatus,
+    isSharing,
     setIsSharing,
     locationError,
+    joinLeaveNotification,
     updateMyName,
     stopSharing,
     endSessionForEveryone,

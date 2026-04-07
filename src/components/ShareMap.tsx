@@ -5,14 +5,9 @@ import { LatLngExpression } from "leaflet";
 import CustomMarker from "@/components/CustomMarker";
 import { useEffect } from "react";
 import { getParticipantBadge } from "@/lib/participantBadge";
+import type { Participant } from "@/hooks/useMultiplayer";
 
-export type Participant = {
-  id: string;
-  name: string;
-  color: string;
-  lat: number | null;
-  lng: number | null;
-};
+export type { Participant };
 
 export type ShareMapProps = {
   participants: Participant[];

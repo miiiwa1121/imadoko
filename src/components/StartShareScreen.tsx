@@ -46,7 +46,7 @@ export default function StartShareScreen({ handleShareStart, isStarting = false 
       </section>
 
       <section className="relative z-[900] px-6 sm:px-10 pb-20">
-        <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-10 space-y-10">
+        <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur border border-gray-100 rounded-3xl shadow-xl p-6 sm:p-10 space-y-10" onClick={(e) => e.stopPropagation()}>
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-3">使い方</h2>
             <p className="text-sm text-gray-600 leading-relaxed">

@@ -3,31 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { LatLngExpression } from "leaflet";
-import type { ShareMapProps, Participant } from "@/components/ShareMap";
-import { Power, Copy, Check, Layers } from "lucide-react";
+import type { ShareMapProps } from "@/components/ShareMap";
+import type { Participant, LocationErrorType } from "@/hooks/useMultiplayer";
+import { Power, Copy, Check } from "lucide-react";
 import Spinner from "@/components/Spinner";
 import { WarningBanner } from "@/components/WarningBanner";
 import { PermissionGuide } from "@/components/PermissionGuide";
-import type { LocationErrorType } from "@/hooks/useMultiplayer";
-import { getParticipantBadge } from "@/lib/participantBadge";
+import { MAP_STYLES } from "@/constants/mapStyles";
+import { MapStyleSelector } from "@/components/MapStyleSelector";
+import { ParticipantList } from "@/components/ParticipantList";
 
 const ShareMap = dynamic<ShareMapProps>(() => import("@/components/ShareMap"), { ssr: false });
-
-const MAP_STYLES = [
-  { name: "淡色地図 (GSI)", url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", attribution: "&copy; 国土地理院", maxNativeZoom: 18 },
-  { name: "OSM Japan", url: "https://tile.openstreetmap.jp/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap", maxNativeZoom: 18 },
-  { name: "CARTO Voyager", url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", attribution: "&copy; CARTO", maxNativeZoom: 20 },
-  { name: "Esri World Imagery", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attribution: "&copy; Esri", maxNativeZoom: 18 }
-];
-
-const getThumbnail = (url: string) => {
-  return url
-    .replace("{s}", "a")
-    .replace("{z}", "16")
-    .replace("{x}", "58208")
-    .replace("{y}", "25800")
-    .replace("{r}", "");
-};
 
 type Props = {
   shareId: string;
@@ -59,7 +45,6 @@ export default function ActiveShareScreen({
   const [focusKey, setFocusKey] = useState(0);
   const [hasInitialFocus, setHasInitialFocus] = useState(false);
   const [mapStyleIndex, setMapStyleIndex] = useState(2);
-  const [isMapStyleOpen, setIsMapStyleOpen] = useState(false);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/share/${shareId}`;
@@ -113,46 +98,11 @@ export default function ActiveShareScreen({
           <PermissionGuide />
         </div>
       )}
-      {/* 地図デザイン切り替えUI */}
-      <div className="absolute top-12 left-4 z-[1000]">
-        <button
-          onClick={() => setIsMapStyleOpen(!isMapStyleOpen)}
-          className="bg-white/90 backdrop-blur p-2 rounded-lg shadow-md border border-gray-100 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
-          title="地図のデザインを変更"
-        >
-          <Layers size={20} />
-        </button>
-
-        {isMapStyleOpen && (
-          <div className="absolute top-12 left-0 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-gray-100 w-64">
-            <p className="text-xs font-bold text-gray-500 mb-2 px-1">地図デザイン</p>
-            <div className="grid grid-cols-2 gap-2">
-              {MAP_STYLES.map((style, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setMapStyleIndex(i);
-                    setIsMapStyleOpen(false);
-                  }}
-                  className={`flex flex-col items-center p-1.5 rounded-lg border-2 transition-all ${
-                    mapStyleIndex === i 
-                      ? "border-blue-500 bg-blue-50/50" 
-                      : "border-transparent hover:bg-gray-100"
-                  }`}
-                >
-                  <div 
-                    className="w-full h-16 bg-gray-200 rounded-md mb-1.5 bg-cover bg-center shadow-sm border border-gray-200"
-                    style={{ backgroundImage: `url(${getThumbnail(style.url)})` }}
-                  />
-                  <span className="text-[10px] font-bold text-gray-700 w-full text-center truncate">
-                    {style.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <MapStyleSelector
+        mapStyleIndex={mapStyleIndex}
+        setMapStyleIndex={setMapStyleIndex}
+        className="absolute top-12 left-4 z-[1000]"
+      />
 
       {myId && (
         <ShareMap
@@ -167,49 +117,12 @@ export default function ActiveShareScreen({
         />
       )}
 
-      {/* フォーカスボタン（スクロール可能リスト） */}
-      <div className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]">
-        {/* 自分を最上部に固定 */}
-        <div className="flex flex-col gap-2 shrink-0">
-          {me && (
-            <button
-              onClick={() => me.lat !== null && me.lng !== null && handleFocus([me.lat, me.lng])}
-              disabled={!me.lat}
-              className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px]"
-              title="自分の位置"
-            >
-              <div
-                style={{ backgroundColor: me.color }}
-                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
-              >
-                {getParticipantBadge(me.name, { isHost: me.name === "ホスト", isSelf: true })}
-              </div>
-              <p className="text-[10px] font-bold text-center truncate px-1">{me.name === "ホスト" ? "ホスト" : (/^P\d+$/.test(me.name) ? "わたし" : me.name)}</p>
-            </button>
-          )}
-        </div>
-        
-        {/* 他の参加者（画面が許す限り表示、超えたらスクロール） */}
-        <div className="flex flex-col gap-2 overflow-y-auto scrollbar-hide pr-1 pb-2">
-          {others.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => p.lat !== null && p.lng !== null && handleFocus([p.lat, p.lng])}
-              disabled={!p.lat}
-              className="bg-white/90 backdrop-blur shadow-md text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors disabled:opacity-50 w-[60px] shrink-0"
-              title={`${p.name}の位置`}
-            >
-              <div
-                style={{ backgroundColor: p.color }}
-                className="w-5 h-5 rounded-full mx-auto mb-1 border-2 border-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white"
-              >
-                {getParticipantBadge(p.name, { isHost: p.name === "ホスト" })}
-              </div>
-              <p className="text-[10px] font-bold text-center truncate px-1 max-w-[50px]">{p.name}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+      <ParticipantList
+        me={me}
+        others={others}
+        handleFocus={handleFocus}
+        className="absolute top-16 right-4 z-[1000] flex flex-col gap-2 max-h-[calc(100vh-140px)]"
+      />
 
       {/* ホスト操作パネル */}
       <div className="absolute bottom-8 left-0 right-0 z-[1000] flex justify-center pointer-events-none">
