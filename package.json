@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.2",
+    "@vercel/speed-insights": "^2.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.543.0",
     "nanoid": "^5.1.5",
